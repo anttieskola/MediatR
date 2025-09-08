@@ -1,0 +1,31 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="Autofac" Version="8.4.0" />
+        <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
+        <PackageVersion Include="DryIoc.Microsoft.DependencyInjection" Version="6.2.0" />
+        <PackageVersion Include="IsExternalInit" Version="1.0.3" />
+        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+        <PackageVersion Include="Lamar" Version="15.0.1" />
+        <PackageVersion Include="LightInject" Version="6.6.4" />
+        <PackageVersion Include="LightInject.Microsoft.DependencyInjection" Version="3.7.1" />
+        <PackageVersion Include="SimpleInjector" Version="5.4.2" />
+        <PackageVersion Include="SimpleInjector.Integration.ServiceCollection" Version="5.5.0" />
+        <PackageVersion Include="Stashbox" Version="5.12.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.10" />
+        <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.10" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageVersion Include="Shouldly" Version="4.2.1" />
+        <PackageVersion Include="System.Reflection.TypeExtensions" Version="4.7.0" />
+        <PackageVersion Include="xunit" Version="2.6.1" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+    </ItemGroup>
+</Project>
