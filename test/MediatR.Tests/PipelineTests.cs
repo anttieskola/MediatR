@@ -438,7 +438,7 @@ public class PipelineTests
         });
     }
 
-    [Fact(Skip = "Lamar does not mix concrete and open generics. Use constraints instead.")]
+    [Fact]
     public async Task Should_handle_concrete_and_open_generics()
     {
         var output = new Logger();
