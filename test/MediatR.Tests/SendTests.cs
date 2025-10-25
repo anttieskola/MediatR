@@ -1,14 +1,13 @@
-using System.Threading;
-
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
-using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
-using MediatR.Pipeline;
 
 namespace MediatR.Tests;
+
 public class SendTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -310,7 +309,7 @@ public class SendTests
             cfg.RegisterGenericHandlers = true;
         });
 
-        services.AddTransient<IRequestHandler<VoidGenericPing<PongExtension>>,TestClass1PingRequestHandler>();
+        services.AddTransient<IRequestHandler<VoidGenericPing<PongExtension>>, TestClass1PingRequestHandler>();
         var serviceProvider = services.BuildServiceProvider();
         var mediator = serviceProvider.GetService<IMediator>()!;
 
@@ -327,7 +326,7 @@ public class SendTests
         var dependency = new Dependency();
         var services = new ServiceCollection();
         services.AddSingleton(dependency);
-        services.AddMediatR(cfg => 
+        services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
             cfg.RegisterGenericHandlers = true;

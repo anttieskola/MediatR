@@ -21,12 +21,12 @@ public class NotificationPublisherTests
 
     public class FirstHandler : INotificationHandler<Notification>
     {
-        public async Task Handle(Notification notification, CancellationToken cancellationToken) 
+        public async Task Handle(Notification notification, CancellationToken cancellationToken)
             => await Task.Delay(500, cancellationToken);
     }
     public class SecondHandler : INotificationHandler<Notification>
     {
-        public async Task Handle(Notification notification, CancellationToken cancellationToken) 
+        public async Task Handle(Notification notification, CancellationToken cancellationToken)
             => await Task.Delay(250, cancellationToken);
     }
 
@@ -48,7 +48,7 @@ public class NotificationPublisherTests
         await mediator.Publish(new Notification());
 
         timer.Stop();
-        
+
         var sequentialElapsed = timer.ElapsedMilliseconds;
 
         services = new ServiceCollection();
@@ -66,7 +66,7 @@ public class NotificationPublisherTests
         await mediator.Publish(new Notification());
 
         timer.Stop();
-        
+
         var parallelElapsed = timer.ElapsedMilliseconds;
 
         sequentialElapsed.ShouldBeGreaterThan(parallelElapsed);

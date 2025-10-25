@@ -1,14 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+using MediatR.NotificationPublishers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR.NotificationPublishers;
 using Shouldly;
 using Xunit;
 
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class NotificationPublisherTests
 {
@@ -64,7 +62,7 @@ public class NotificationPublisherTests
         mediator.ShouldNotBeNull();
 
         await mediator.Publish(new Pinged());
-        
+
         publisher.CallCount.ShouldBeGreaterThan(0);
     }
 

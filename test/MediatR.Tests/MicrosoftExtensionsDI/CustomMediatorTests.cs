@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
-
 using System;
 using System.Linq;
 using Shouldly;
 using Xunit;
+
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class CustomMediatorTests
 {
@@ -52,7 +51,7 @@ public class CustomMediatorTests
             cfg.MediatorImplementationType = typeof(MyCustomMediator);
             cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
         });
-            
+
         // Call AddMediatr again, this should NOT override our custom mediatr (With MS DI, last registration wins)
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests)));
 

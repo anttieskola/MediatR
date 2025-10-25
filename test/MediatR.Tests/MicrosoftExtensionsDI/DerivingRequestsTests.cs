@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class DerivingRequestsTests
 {

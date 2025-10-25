@@ -1,12 +1,12 @@
+using MediatR.NotificationPublishers;
+using MediatR.Pipeline;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace MediatR.Tests.Pipeline;
-
-using System.Threading.Tasks;
-using MediatR.Pipeline;
-using Shouldly;
-using Lamar;
-using Xunit;
 
 public class RequestPostProcessorTests
 {
@@ -41,21 +41,22 @@ public class RequestPostProcessorTests
     [Fact]
     public async Task Should_run_postprocessors()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-                scanner.AddAllTypesOf(typeof(IRequestPostProcessor<,>));
-            });
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(RequestPostProcessorBehavior<,>));
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
 
-        var mediator = container.GetInstance<IMediator>();
+        // Register handler and post-processor
+        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddTransient<IRequestPostProcessor<Ping, Pong>, PingPongPostProcessor>();
+
+        // Register the pipeline behavior (post-processor behavior)
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
+
+        // Register MediatR components required by Mediator
+        services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
+        services.AddTransient<IMediator, Mediator>();
+
+        var provider = services.BuildServiceProvider();
+
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = await mediator.Send(new Ping { Message = "Ping" });
 

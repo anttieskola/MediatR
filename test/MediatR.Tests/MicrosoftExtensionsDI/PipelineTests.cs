@@ -1,19 +1,15 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
-using Xunit.Abstractions;
-
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
-
+using MediatR.Pipeline;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Pipeline;
 using Shouldly;
 using Xunit;
+
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class PipelineTests
 {
@@ -54,7 +50,7 @@ public class PipelineTests
             return response;
         }
     }
-   
+
     public class OuterStreamBehavior : IStreamPipelineBehavior<Ping, Pong>
     {
         private readonly Logger _output;
@@ -442,7 +438,7 @@ public class PipelineTests
         var provider = services.BuildServiceProvider();
 
         var mediator = provider.GetRequiredService<IMediator>();
-            
+
         var response = await mediator.Send(new Ping { Message = "Ping" });
 
         response.Message.ShouldBe("Ping Pong");
@@ -508,7 +504,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping {Message = "Ping", ThrowAction = msg => throw new ApplicationException(msg.Message + " Thrown")});
+        var response = await mediator.Send(new Ping { Message = "Ping", ThrowAction = msg => throw new ApplicationException(msg.Message + " Thrown") });
 
         response.Message.ShouldBe("Ping Thrown Handled by Specific Type");
         output.Messages.ShouldNotContain("Logging ApplicationException exception");
@@ -525,7 +521,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        Should.Throw<Exception>(async () => await mediator.Send(new Ping {Message = "Ping", ThrowAction = msg => throw new Exception(msg.Message + " Thrown")}));
+        Should.Throw<Exception>(async () => await mediator.Send(new Ping { Message = "Ping", ThrowAction = msg => throw new Exception(msg.Message + " Thrown") }));
 
         output.Messages.ShouldContain("Ping Thrown Logged by Generic Type");
         output.Messages.ShouldContain("Logging generic exception");
@@ -546,7 +542,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        Should.Throw<Exception>(async () => await mediator.Send(new Ping {Message = "Ping"}));
+        Should.Throw<Exception>(async () => await mediator.Send(new Ping { Message = "Ping" }));
 
         output.Messages.ShouldContain("Ping Logged by Generic Type");
         output.Messages.ShouldContain("Logging generic exception");
@@ -563,7 +559,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        Should.Throw<SystemException>(async () => await mediator.Send(new Ping {Message = "Ping", ThrowAction = msg => throw new SystemException(msg.Message + " Thrown")}));
+        Should.Throw<SystemException>(async () => await mediator.Send(new Ping { Message = "Ping", ThrowAction = msg => throw new SystemException(msg.Message + " Thrown") }));
 
         output.Messages.ShouldContain("Logging exception 1");
         output.Messages.ShouldContain("Logging exception 2");
@@ -687,7 +683,7 @@ public class PipelineTests
             services.BuildServiceProvider();
         });
     }
-    
+
     [Fact]
     public void Should_handle_inferred_behavior_registration()
     {
@@ -707,7 +703,7 @@ public class PipelineTests
         cfg.BehaviorsToRegister[1].ImplementationFactory.ShouldBeNull();
         cfg.BehaviorsToRegister[1].ImplementationInstance.ShouldBeNull();
         cfg.BehaviorsToRegister[1].Lifetime.ShouldBe(ServiceLifetime.Transient);
-        
+
         var services = new ServiceCollection();
 
         cfg.RegisterServicesFromAssemblyContaining<Ping>();
@@ -719,7 +715,7 @@ public class PipelineTests
         });
     }
 
-        
+
     [Fact]
     public void Should_handle_inferred_stream_behavior_registration()
     {
@@ -739,7 +735,7 @@ public class PipelineTests
         cfg.StreamBehaviorsToRegister[1].ImplementationFactory.ShouldBeNull();
         cfg.StreamBehaviorsToRegister[1].ImplementationInstance.ShouldBeNull();
         cfg.StreamBehaviorsToRegister[1].Lifetime.ShouldBe(ServiceLifetime.Transient);
-        
+
         var services = new ServiceCollection();
 
         cfg.RegisterServicesFromAssemblyContaining<Ping>();
@@ -750,7 +746,7 @@ public class PipelineTests
             services.BuildServiceProvider();
         });
     }
-    
+
     [Fact]
     public void Should_handle_inferred_pre_processor_registration()
     {
@@ -770,7 +766,7 @@ public class PipelineTests
         cfg.RequestPreProcessorsToRegister[1].ImplementationFactory.ShouldBeNull();
         cfg.RequestPreProcessorsToRegister[1].ImplementationInstance.ShouldBeNull();
         cfg.RequestPreProcessorsToRegister[1].Lifetime.ShouldBe(ServiceLifetime.Transient);
-        
+
         var services = new ServiceCollection();
 
         cfg.RegisterServicesFromAssemblyContaining<Ping>();
@@ -781,7 +777,7 @@ public class PipelineTests
             services.BuildServiceProvider();
         });
     }
-    
+
     [Fact]
     public void Should_handle_inferred_post_processor_registration()
     {
@@ -801,7 +797,7 @@ public class PipelineTests
         cfg.RequestPostProcessorsToRegister[1].ImplementationFactory.ShouldBeNull();
         cfg.RequestPostProcessorsToRegister[1].ImplementationInstance.ShouldBeNull();
         cfg.RequestPostProcessorsToRegister[1].Lifetime.ShouldBe(ServiceLifetime.Transient);
-        
+
         var services = new ServiceCollection();
 
         cfg.RegisterServicesFromAssemblyContaining<Ping>();
@@ -812,7 +808,7 @@ public class PipelineTests
             services.BuildServiceProvider();
         });
     }
-    
+
     [Fact]
     public void Should_handle_open_behaviors_registration_from_a_single_type()
     {
@@ -834,7 +830,7 @@ public class PipelineTests
         cfg.StreamBehaviorsToRegister[0].ImplementationFactory.ShouldBeNull();
         cfg.StreamBehaviorsToRegister[0].ImplementationInstance.ShouldBeNull();
         cfg.StreamBehaviorsToRegister[0].Lifetime.ShouldBe(ServiceLifetime.Singleton);
-        
+
         var services = new ServiceCollection();
 
         cfg.RegisterServicesFromAssemblyContaining<Ping>();
@@ -877,7 +873,7 @@ public class PipelineTests
 
 
     public sealed record FooRequest : IRequest;
-    
+
     public interface IBlogger<T>
     {
         IList<string> Messages { get; }
@@ -895,7 +891,8 @@ public class PipelineTests
         public IList<string> Messages => _logger.Messages;
     }
 
-    public sealed class FooRequestHandler : IRequestHandler<FooRequest> {
+    public sealed class FooRequestHandler : IRequestHandler<FooRequest>
+    {
         public FooRequestHandler(IBlogger<FooRequestHandler> logger)
         {
             this.logger = logger;
@@ -903,13 +900,15 @@ public class PipelineTests
 
         readonly IBlogger<FooRequestHandler> logger;
 
-        public Task Handle(FooRequest request, CancellationToken cancellationToken) {
+        public Task Handle(FooRequest request, CancellationToken cancellationToken)
+        {
             logger.Messages.Add("Invoked Handler");
             return Task.CompletedTask;
         }
     }
 
-    sealed class ClosedBehavior : IPipelineBehavior<FooRequest, Unit> {
+    sealed class ClosedBehavior : IPipelineBehavior<FooRequest, Unit>
+    {
         public ClosedBehavior(IBlogger<ClosedBehavior> logger)
         {
             this.logger = logger;
@@ -917,21 +916,25 @@ public class PipelineTests
 
         readonly IBlogger<ClosedBehavior> logger;
 
-        public Task<Unit> Handle(FooRequest request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken) {
+        public Task<Unit> Handle(FooRequest request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
+        {
             logger.Messages.Add("Invoked Closed Behavior");
             return next();
         }
     }
 
     sealed class Open2Behavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull {
-        public Open2Behavior(IBlogger<Open2Behavior<TRequest, TResponse>> logger) {
+        where TRequest : notnull
+    {
+        public Open2Behavior(IBlogger<Open2Behavior<TRequest, TResponse>> logger)
+        {
             this.logger = logger;
         }
 
         readonly IBlogger<Open2Behavior<TRequest, TResponse>> logger;
 
-        public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken) {
+        public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        {
             logger.Messages.Add("Invoked Open Behavior");
             return next();
         }
@@ -961,8 +964,8 @@ public class PipelineTests
         var mediator = provider.GetRequiredService<IMediator>();
         var request = new FooRequest();
         await mediator.Send(request);
-        
-        logger.Messages.ShouldBe(new []
+
+        logger.Messages.ShouldBe(new[]
         {
             "Invoked Closed Behavior",
             "Invoked Open Behavior",

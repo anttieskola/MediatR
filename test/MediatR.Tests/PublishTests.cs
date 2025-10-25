@@ -1,15 +1,14 @@
 using System.Threading;
-
-namespace MediatR.Tests;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Lamar;
 using Xunit;
+
+namespace MediatR.Tests;
 
 public class PublishTests
 {
@@ -22,15 +21,9 @@ public class PublishTests
     {
         private readonly TextWriter _writer;
 
-        public PongHandler(TextWriter writer)
-        {
-            _writer = writer;
-        }
+        public PongHandler(TextWriter writer) => _writer = writer;
 
-        public Task Handle(Ping notification, CancellationToken cancellationToken)
-        {
-            return _writer.WriteLineAsync(notification.Message + " Pong");
-        }
+        public Task Handle(Ping notification, CancellationToken cancellationToken) => _writer.WriteLineAsync(notification.Message + " Pong");
     }
 
     public class PungHandler : INotificationHandler<Ping>
@@ -54,24 +47,23 @@ public class PublishTests
         var builder = new StringBuilder();
         var writer = new StringWriter(builder);
 
-        var container = new Container(cfg =>
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<IMediator>(sp =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof (INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<IMediator>().Use<Mediator>();
+            var pub = sp.GetService<INotificationPublisher>();
+            return pub is null ? new Mediator(sp) : new Mediator(sp, pub);
         });
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
-        var result = builder.ToString().Split(new [] {Environment.NewLine}, StringSplitOptions.None);
+        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }
@@ -82,25 +74,24 @@ public class PublishTests
         var builder = new StringBuilder();
         var writer = new StringWriter(builder);
 
-        var container = new Container(cfg =>
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<IMediator>(sp =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof (INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<IMediator>().Use<Mediator>();
+            var pub = sp.GetService<INotificationPublisher>();
+            return pub is null ? new Mediator(sp) : new Mediator(sp, pub);
         });
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         object message = new Ping { Message = "Ping" };
         await mediator.Publish(message);
 
-        var result = builder.ToString().Split(new [] {Environment.NewLine}, StringSplitOptions.None);
+        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }
@@ -141,20 +132,15 @@ public class PublishTests
         var builder = new StringBuilder();
         var writer = new StringWriter(builder);
 
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<IMediator>().Use<SequentialMediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<IMediator>(sp => new SequentialMediator(sp));
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
@@ -170,21 +156,20 @@ public class PublishTests
         var writer = new StringWriter(builder);
         var publisher = new SequentialPublisher();
 
-        var container = new Container(cfg =>
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<INotificationPublisher>(publisher);
+        services.AddSingleton<IMediator>(sp =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<INotificationPublisher>().Use(publisher);
-            cfg.For<IMediator>().Use<Mediator>();
+            var pub = sp.GetService<INotificationPublisher>();
+            return pub is null ? new Mediator(sp) : new Mediator(sp, pub);
         });
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
@@ -200,20 +185,15 @@ public class PublishTests
         var builder = new StringBuilder();
         var writer = new StringWriter(builder);
 
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<IMediator>().Use<SequentialMediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<IMediator>(sp => new SequentialMediator(sp));
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         // wrap notifications in an array, so this test won't break on a 'replace with var' refactoring
         var notifications = new INotification[] { new Ping { Message = "Ping" } };
@@ -230,24 +210,23 @@ public class PublishTests
         var builder = new StringBuilder();
         var writer = new StringWriter(builder);
 
-        var container = new Container(cfg =>
+        var services = new ServiceCollection();
+        services.AddSingleton<TextWriter>(writer);
+        services.AddSingleton<INotificationHandler<Ping>, PongHandler>();
+        services.AddSingleton<INotificationHandler<Ping>, PungHandler>();
+        services.AddSingleton<IMediator>(sp =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof (INotificationHandler<>));
-            });
-            cfg.For<TextWriter>().Use(writer);
-            cfg.For<IPublisher>().Use<Mediator>();
+            var pub = sp.GetService<INotificationPublisher>();
+            return pub is null ? new Mediator(sp) : new Mediator(sp, pub);
         });
+        services.AddSingleton<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IPublisher>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IPublisher>();
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
-        var result = builder.ToString().Split(new [] {Environment.NewLine}, StringSplitOptions.None);
+        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }

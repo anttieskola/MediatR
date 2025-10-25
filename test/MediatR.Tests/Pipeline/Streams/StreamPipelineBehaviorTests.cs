@@ -1,13 +1,12 @@
 using System.Threading;
-
-namespace MediatR.Tests.Pipeline.Streams;
-
 using Shouldly;
-using Lamar;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+
+namespace MediatR.Tests.Pipeline.Streams;
 
 public class StreamPipelineBehaviorTests
 {
@@ -49,21 +48,18 @@ public class StreamPipelineBehaviorTests
     [Fact]
     public async Task Should_run_pipeline_behavior()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Sing>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-                scanner.AddAllTypesOf(typeof(IStreamPipelineBehavior<,>));
-            });
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(SingSongPipelineBehavior));
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
 
-        var mediator = container.GetInstance<IMediator>();
+        // Register the stream handler and the pipeline behavior
+        services.AddTransient<IStreamRequestHandler<Sing, Song>, SingHandler>();
+        services.AddTransient<IStreamPipelineBehavior<Sing, Song>, SingSongPipelineBehavior>();
+
+        // Register Mediator
+        services.AddTransient<IMediator, Mediator>();
+
+        var provider = services.BuildServiceProvider();
+
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var responses = mediator.CreateStream(new Sing { Message = "Sing" });
 

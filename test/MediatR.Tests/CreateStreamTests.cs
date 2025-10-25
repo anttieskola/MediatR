@@ -1,14 +1,13 @@
 using System.Threading;
-
-namespace MediatR.Tests;
-
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Lamar;
 using Xunit;
+
+namespace MediatR.Tests;
 
 public class CreateStreamTests
 {
@@ -25,7 +24,7 @@ public class CreateStreamTests
 
     public class PingStreamHandler : IStreamRequestHandler<Ping, Pong>
     {
-        public async IAsyncEnumerable<Pong> Handle(Ping request, [EnumeratorCancellation]CancellationToken cancellationToken)
+        public async IAsyncEnumerable<Pong> Handle(Ping request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             yield return await Task.Run(() => new Pong { Message = request.Message + " Pang" });
         }
@@ -34,19 +33,13 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(CreateStreamTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = mediator.CreateStream(new Ping { Message = "Ping" });
         int i = 0;
@@ -66,19 +59,13 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler_via_dynamic_dispatch()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(CreateStreamTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         object request = new Ping { Message = "Ping" };
         var response = mediator.CreateStream(request);
@@ -99,19 +86,14 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler_by_specific_interface()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(CreateStreamTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<ISender>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<ISender>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<ISender>();
+
         var response = mediator.CreateStream(new Ping { Message = "Ping" });
         int i = 0;
         await foreach (Pong result in response)
@@ -130,12 +112,12 @@ public class CreateStreamTests
     [Fact]
     public void Should_raise_execption_on_null_request()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         Should.Throw<ArgumentNullException>(() => mediator.CreateStream((Ping) null!));
     }
@@ -143,12 +125,12 @@ public class CreateStreamTests
     [Fact]
     public void Should_raise_execption_on_null_request_via_dynamic_dispatch()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         Should.Throw<ArgumentNullException>(() => mediator.CreateStream((object) null!));
     }

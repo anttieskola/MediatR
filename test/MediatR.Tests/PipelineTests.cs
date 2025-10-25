@@ -1,12 +1,12 @@
 using System.Threading;
-
-namespace MediatR.Tests;
-
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Lamar;
 using Xunit;
+
+namespace MediatR.Tests;
 
 public class PipelineTests
 {
@@ -156,7 +156,7 @@ public class PipelineTests
         }
     }
 
-    public class InnerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> 
+    public class InnerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
         private readonly Logger _output;
@@ -244,28 +244,23 @@ public class PipelineTests
     public async Task Should_wrap_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
-            cfg.For<IPipelineBehavior<Ping, Pong>>().Add<OuterBehavior>();
-            cfg.For<IPipelineBehavior<Ping, Pong>>().Add<InnerBehavior>();
-            cfg.For<IMediator>().Use<Mediator>();
-        });
 
-        var mediator = container.GetInstance<IMediator>();
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddSingleton<IPipelineBehavior<Ping, Pong>, OuterBehavior>();
+        services.AddSingleton<IPipelineBehavior<Ping, Pong>, InnerBehavior>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = await mediator.Send(new Ping { Message = "Ping" });
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new []
+        output.Messages.ShouldBe(new[]
         {
             "Outer before",
             "Inner before",
@@ -279,26 +274,21 @@ public class PipelineTests
     public async Task Should_wrap_void_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<>));
-            });
-            cfg.For<Logger>().Use(output);
-            cfg.For<IPipelineBehavior<VoidPing, Unit>>().Add<OuterVoidBehavior>();
-            cfg.For<IPipelineBehavior<VoidPing, Unit>>().Add<InnerVoidBehavior>();
-            cfg.For<IMediator>().Use<Mediator>();
-        });
 
-        var mediator = container.GetInstance<IMediator>();
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
+        services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, OuterVoidBehavior>();
+        services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, InnerVoidBehavior>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Send(new VoidPing { Message = "Ping" });
 
-        output.Messages.ShouldBe(new []
+        output.Messages.ShouldBe(new[]
         {
             "Outer before",
             "Inner before",
@@ -312,24 +302,19 @@ public class PipelineTests
     public async Task Should_wrap_generics_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
 
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
 
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
 
-        var mediator = container.GetInstance<IMediator>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = await mediator.Send(new Ping { Message = "Ping" });
 
@@ -349,25 +334,20 @@ public class PipelineTests
     public async Task Should_wrap_void_generics_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-                scanner.AddAllTypesOf(typeof(IRequestHandler<>));
-            });
-            cfg.For<Logger>().Use(output);
 
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
 
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
 
-        var mediator = container.GetInstance<IMediator>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Send(new VoidPing { Message = "Ping" });
 
@@ -385,27 +365,25 @@ public class PipelineTests
     public async Task Should_handle_constrained_generics()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
 
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(ConstrainedBehavior<,>));
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
 
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(ConstrainedBehavior<,>));
 
-        container.GetAllInstances<IPipelineBehavior<Ping, Pong>>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+
+        // force resolution like original test did
+        provider.GetServices<IPipelineBehavior<Ping, Pong>>();
+
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = await mediator.Send(new Ping { Message = "Ping" });
 
@@ -438,31 +416,29 @@ public class PipelineTests
         });
     }
 
-    [Fact(Skip = "Lamar does not mix concrete and open generics. Use constraints instead.")]
+    [Fact]
     public async Task Should_handle_concrete_and_open_generics()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
 
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
-            cfg.For(typeof(IPipelineBehavior<Ping, Pong>)).Add(typeof(ConcreteBehavior));
+        var services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
 
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        services.AddSingleton<IPipelineBehavior<Ping, Pong>, ConcreteBehavior>();
 
-        container.GetAllInstances<IPipelineBehavior<Ping, Pong>>();
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+
+        // force resolution like original test did
+        provider.GetServices<IPipelineBehavior<Ping, Pong>>();
+
+        var mediator = provider.GetRequiredService<IMediator>();
 
         var response = await mediator.Send(new Ping { Message = "Ping" });
 

@@ -1,17 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
-
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Pipeline;
 using Shouldly;
 using Xunit;
+
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class StreamPipelineTests
 {
@@ -84,7 +80,7 @@ public class StreamPipelineTests
             "Outer after"
         });
     }
-   
+
     [Fact]
     public async Task Should_register_and_wrap_with_behavior()
     {

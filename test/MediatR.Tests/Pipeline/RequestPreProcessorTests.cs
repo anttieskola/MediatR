@@ -1,12 +1,12 @@
 using System.Threading;
+using MediatR.NotificationPublishers;
+using MediatR.Pipeline;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace MediatR.Tests.Pipeline;
-
-using System.Threading.Tasks;
-using MediatR.Pipeline;
-using Shouldly;
-using Lamar;
-using Xunit;
 
 public class RequestPreProcessorTests
 {
@@ -41,24 +41,22 @@ public class RequestPreProcessorTests
     [Fact]
     public async Task Should_run_preprocessors()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-                scanner.AddAllTypesOf(typeof(IRequestPreProcessor<>));
-            });
-            cfg.For(typeof(IPipelineBehavior<,>)).Add(typeof(RequestPreProcessorBehavior<,>));
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
+        // Register handlers and preprocessor (register by interface)
+        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddTransient<IRequestPreProcessor<Ping>, PingPreProcessor>();
+        // Register the pipeline behavior (preprocessor behavior)
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
 
-        var mediator = container.GetInstance<IMediator>();
+        // Register MediatR components.
+        // Note: The mediator's constructor requires an IServiceProvider and a notification publisher.
+        // In this example, we register a basic publisher implementation.
+        services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
+        services.AddTransient<IMediator, Mediator>();
 
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
         var response = await mediator.Send(new Ping { Message = "Ping" });
-
         response.Message.ShouldBe("Ping Ping Pong");
     }
 

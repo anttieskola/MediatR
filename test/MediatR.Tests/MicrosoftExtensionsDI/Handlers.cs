@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests
+namespace MediatR.Tests.MicrosoftExtensionsDI
 {
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-
     public class Ping : IRequest<Pong>
     {
         public string? Message { get; init; }
@@ -254,10 +253,9 @@ namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests
     {
         public Task Handle(VoidGenericPing<T> request, CancellationToken cancellationToken) => Task.CompletedTask;
     }
-
 }
 
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests.Included
+namespace MediatR.Tests.MicrosoftExtensionsDI.Included
 {
     using System.Threading;
     using System.Threading.Tasks;

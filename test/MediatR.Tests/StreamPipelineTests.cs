@@ -1,13 +1,12 @@
 using System.Threading;
-
-namespace MediatR.Tests;
-
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Lamar;
 using Xunit;
+
+namespace MediatR.Tests;
 
 public class StreamPipelineTests
 {
@@ -40,7 +39,7 @@ public class StreamPipelineTests
             _output = output;
         }
 
-        public async IAsyncEnumerable<Pong> Handle(Ping request, [EnumeratorCancellation]CancellationToken cancellationToken)
+        public async IAsyncEnumerable<Pong> Handle(Ping request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             _output.Messages.Add("Handler");
             yield return await Task.FromResult(new Pong { Message = request.Message + " Pong" });
@@ -195,29 +194,24 @@ public class StreamPipelineTests
     public async Task Should_wrap_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
+        IServiceCollection services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddMediatR(cfg =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
-            cfg.For<IStreamPipelineBehavior<Ping, Pong>>().Add<OuterBehavior>();
-            cfg.For<IStreamPipelineBehavior<Ping, Pong>>().Add<InnerBehavior>();
-            cfg.For<IMediator>().Use<Mediator>();
+            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
+            cfg.AddStreamBehavior<OuterBehavior>();
+            cfg.AddStreamBehavior<InnerBehavior>();
         });
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach(var response in mediator.CreateStream(new Ping { Message = "Ping" }))
+        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
         {
             response.Message.ShouldBe("Ping Pong");
         }
 
-        output.Messages.ShouldBe(new []
+        output.Messages.ShouldBe(new[]
         {
             "Outer before",
             "Inner before",
@@ -231,24 +225,18 @@ public class StreamPipelineTests
     public async Task Should_wrap_generics_with_behavior()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
+        IServiceCollection services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddMediatR(cfg =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
+            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
-
-            cfg.For<IMediator>().Use<Mediator>();
+            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
         });
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
         {
@@ -269,25 +257,19 @@ public class StreamPipelineTests
     public async Task Should_handle_constrained_generics()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
+        IServiceCollection services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddMediatR(cfg =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
+            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(ConstrainedBehavior<,>));
-
-            cfg.For<IMediator>().Use<Mediator>();
+            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
+            cfg.AddOpenStreamBehavior(typeof(ConstrainedBehavior<,>));
         });
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
         {
@@ -322,29 +304,23 @@ public class StreamPipelineTests
         });
     }
 
-    [Fact(Skip = "Lamar does not mix concrete and open generics. Use constraints instead.")]
+    [Fact]
     public async Task Should_handle_concrete_and_open_generics()
     {
         var output = new Logger();
-        var container = new Container(cfg =>
+        IServiceCollection services = new ServiceCollection();
+        services.AddSingleton(output);
+        services.AddMediatR(cfg =>
         {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(PublishTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IStreamRequestHandler<,>));
-            });
-            cfg.For<Logger>().Use(output);
+            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(OuterBehavior<,>));
-            cfg.For(typeof(IStreamPipelineBehavior<,>)).Add(typeof(InnerBehavior<,>));
-            cfg.For(typeof(IStreamPipelineBehavior<Ping, Pong>)).Add(typeof(ConcreteBehavior));
-
-            cfg.For<IMediator>().Use<Mediator>();
+            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
+            cfg.AddStreamBehavior<ConcreteBehavior>();
         });
 
-        var mediator = container.GetInstance<IMediator>();
+        var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
 
         await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
         {

@@ -1,14 +1,13 @@
 using System.Reflection;
 using System.Threading;
-
-namespace MediatR.Tests;
-
 using System;
 using System.Linq;
 using Shouldly;
-using Lamar;
 using System.Threading.Tasks;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MediatR.Tests;
 
 public class GenericTypeConstraintsTests
 {
@@ -89,21 +88,17 @@ public class GenericTypeConstraintsTests
 
     public GenericTypeConstraintsTests()
     {
-        var container = new Container(cfg =>
-        {
-            cfg.Scan(scanner =>
-            {
-                scanner.AssemblyContainingType(typeof(GenericTypeConstraintsTests));
-                scanner.IncludeNamespaceContainingType<Ping>();
-                scanner.IncludeNamespaceContainingType<Jing>();
-                scanner.WithDefaultConventions();
-                scanner.AddAllTypesOf(typeof(IRequestHandler<,>));
-                scanner.AddAllTypesOf(typeof(IRequestHandler<>));
-            });
-            cfg.For<IMediator>().Use<Mediator>();
-        });
+        var services = new ServiceCollection();
 
-        _mediator = container.GetInstance<IMediator>();
+        // Register the concrete request handlers used in these tests
+        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        services.AddSingleton<IRequestHandler<Jing>, JingHandler>();
+
+        // Mediator expects an IServiceProvider; register it so tests can resolve IMediator/ISender
+        services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+
+        _mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
     }
 
     [Fact]
@@ -116,7 +111,7 @@ public class GenericTypeConstraintsTests
         await _mediator.Send(jing);
 
         // Create new instance of type constrained class
-        var genericTypeConstraintsVoidReturn = new  GenericTypeConstraintJing();
+        var genericTypeConstraintsVoidReturn = new GenericTypeConstraintJing();
 
         // Assert it is of type IRequest and IRequest<T>
         Assert.True(genericTypeConstraintsVoidReturn.IsIRequest);

@@ -83,6 +83,6 @@ public class UnitTests
     {
         var unit1 = new Unit();
 
-        Assert.Equal(0, ((IComparable)unit1).CompareTo(value));
+        Assert.Equal(0, ((IComparable) unit1).CompareTo(value));
     }
 }

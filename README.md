@@ -1,89 +1,30 @@
-MediatR
-=======
+# MediatR
 
-![CI](https://github.com/jbogard/MediatR/workflows/CI/badge.svg)
-[![NuGet](https://img.shields.io/nuget/dt/mediatr.svg)](https://www.nuget.org/packages/mediatr) 
-[![NuGet](https://img.shields.io/nuget/vpre/mediatr.svg)](https://www.nuget.org/packages/mediatr)
-[![MyGet (dev)](https://img.shields.io/myget/mediatr-ci/v/MediatR.svg)](https://myget.org/gallery/mediatr-ci)
+Fork of popular MediatR library licensed under Apache 2.0 license.
 
-Simple mediator implementation in .NET
+## License Information
 
-In-process messaging with no dependencies.
+[Licensed under the Apache License, Version 2.0 (the "License")](./LICENSE))
 
-Supports request/response, commands, queries, notifications and events, synchronous and async with intelligent dispatching via C# generic variance.
+This product includes software developed by Original Author Jimmy Bogard.
+Portions licensed under the Apache License, Version 2.0.
 
-Examples in the [wiki](https://github.com/jbogard/MediatR/wiki).
+Code is based on the last version of MediatR library with Apache 2.0 license.
+Forked maded from Commit SHA 8a64581e2570e7410c5f44835d9ea112beccbe6b.
 
-### Installing MediatR
+All trademarks mentioned herein are the property of their respective owners.
+All development after fork is licensed under the Apache License, Version 2.0.
 
-You should install [MediatR with NuGet](https://www.nuget.org/packages/MediatR):
+**Can be used as drop-in replacement for MediatR library**
 
-    Install-Package MediatR
-    
-Or via the .NET Core command line interface:
+## Changes after fork
 
-    dotnet add package MediatR
-
-Either commands, from Package Manager Console or .NET Core CLI, will download and install MediatR and all required dependencies.
-
-### Using Contracts-Only Package
-
-To reference only the contracts for MediatR, which includes:
-
-- `IRequest` (including generic variants)
-- `INotification`
-- `IStreamRequest`
-
-Add a package reference to [MediatR.Contracts](https://www.nuget.org/packages/MediatR.Contracts)
-
-This package is useful in scenarios where your MediatR contracts are in a separate assembly/project from handlers. Example scenarios include:
-- API contracts
-- GRPC contracts
-- Blazor
-
-### Registering with `IServiceCollection`
-
-MediatR supports `Microsoft.Extensions.DependencyInjection.Abstractions` directly. To register various MediatR services and handlers:
-
-```
-services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
-```
-
-or with an assembly:
-
-```
-services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Startup).Assembly));
-```
-
-This registers:
-
-- `IMediator` as transient
-- `ISender` as transient
-- `IPublisher` as transient
-- `IRequestHandler<,>` concrete implementations as transient
-- `IRequestHandler<>` concrete implementations as transient
-- `INotificationHandler<>` concrete implementations as transient
-- `IStreamRequestHandler<>` concrete implementations as transient
-- `IRequestExceptionHandler<,,>` concrete implementations as transient
-- `IRequestExceptionAction<,>)` concrete implementations as transient
-
-This also registers open generic implementations for:
-
-- `INotificationHandler<>`
-- `IRequestExceptionHandler<,,>`
-- `IRequestExceptionAction<,>`
-
-To register behaviors, stream behaviors, pre/post processors:
-
-```csharp
-services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(Startup).Assembly);
-    cfg.AddBehavior<PingPongBehavior>();
-    cfg.AddStreamBehavior<PingPongStreamBehavior>();
-    cfg.AddRequestPreProcessor<PingPreProcessor>();
-    cfg.AddRequestPostProcessor<PingPongPostProcessor>();
-    cfg.AddOpenBehavior(typeof(GenericBehavior<,>));
-    });
-```
-
-With additional methods for open generics and overloads for explicit service types.
+### 2025-10-25 - Simplification and cleanup
+- No changes to actuall library code, except removed MediatR.Contracts project/namespace as it only contained
+  interfaces, which were moved to MediatR namespace
+- Removed many 3rd party dependencies and examples (Autofac, Dryloc, Lamar, LightInject, Stashbox, Windsor)
+- Refactored unit tests to not use 3rd party libraries (like Lamar) but instead .NET CORE libraries only
+- Added global build properties
+- Added central package versions
+- Removed logos, workflows (non essential files)
+- Update to .NET 9

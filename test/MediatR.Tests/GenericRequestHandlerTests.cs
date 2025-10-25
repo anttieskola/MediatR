@@ -1,16 +1,8 @@
-﻿using MediatR.Extensions.Microsoft.DependencyInjection.Tests;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
-using System.Reflection.PortableExecutable;
 using MediatR.Tests.MicrosoftExtensionsDI;
 
 namespace MediatR.Tests
@@ -45,7 +37,7 @@ namespace MediatR.Tests
                 .Select(i => dynamicAssembly.GetType($"TestClass{i}")!)
                 .ToArray();
 
-            var combinations = GenerateCombinations(testClasses, numberOfInterfaces);          
+            var combinations = GenerateCombinations(testClasses, numberOfInterfaces);
 
             foreach (var combination in combinations)
             {
@@ -54,7 +46,7 @@ namespace MediatR.Tests
 
                 var handler = provider.GetService(requestHandlerInterface);
                 handler.ShouldNotBeNull($"Handler for {concreteRequestType} should not be null");
-            }            
+            }
         }
 
         [Theory]
@@ -63,8 +55,8 @@ namespace MediatR.Tests
         [InlineData(1, 1, 1)]
         [InlineData(50, 3, 3)]
         public void ShouldRegisterTheCorrectAmountOfHandlers(int numberOfClasses, int numberOfInterfaces, int numberOfTypeParameters)
-        {  
-            var dynamicAssembly = GenerateCombinationsTestAssembly(numberOfClasses, numberOfInterfaces, numberOfTypeParameters);          
+        {
+            var dynamicAssembly = GenerateCombinationsTestAssembly(numberOfClasses, numberOfInterfaces, numberOfTypeParameters);
             int expectedCombinations = CalculateTotalCombinations(numberOfClasses, numberOfInterfaces, numberOfTypeParameters);
             var testClasses = Enumerable.Range(1, numberOfClasses)
                .Select(i => dynamicAssembly.GetType($"TestClass{i}")!)

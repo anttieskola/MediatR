@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace MediatR.Extensions.Microsoft.DependencyInjection.Tests;
-
 using System;
 using System.Linq;
 using Shouldly;
 using Xunit;
+
+namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class AssemblyResolutionTests
 {
