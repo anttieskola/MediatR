@@ -28,3 +28,6 @@ All development after fork is licensed under the Apache License, Version 2.0.
 - Added central package versions
 - Removed logos, workflows (non essential files)
 - Update to .NET 9
+
+### 2025-11-23 - Updated to .NET 10
+- Updated to .NET 10
