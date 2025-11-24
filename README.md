@@ -17,6 +17,9 @@ All development after fork is licensed under the Apache License, Version 2.0.
 
 **Can be used as drop-in replacement for MediatR library**
 
+## Testing
+- [Testing coverage](./coverage/Summary.md)
+
 ## Changes after fork
 
 ### 2025-10-25 - Simplification and cleanup
@@ -31,3 +34,13 @@ All development after fork is licensed under the Apache License, Version 2.0.
 
 ### 2025-11-23 - Updated to .NET 10
 - Updated to .NET 10
+
+### 2025-11-24 - Sonerqube build
+- Added sonarqube build script and adjusted test projects to generate code coverage reports for sonarqube
+
+## dotnet tools used
+```bash
+dotnet tool install --global dotnet-sonarscanner
+dotnet tool install --global dotnet-coverage
+dotnet tool install --global dotnet-reportgenerator-globaltool
+```

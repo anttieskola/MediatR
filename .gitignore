@@ -220,3 +220,13 @@ _Pvt_Extensions
 # Project Rider
 *.iml
 .idea
+
+# Sonarqube
+.sonarqube/*
+
+# Coverage (sonarqube)
+coverage.xml
+
+# Test results
+**/TestResults/*
+
