@@ -18,7 +18,7 @@ All development after fork is licensed under the Apache License, Version 2.0.
 **Can be used as drop-in replacement for MediatR library**
 
 ## Testing
-- [Testing coverage](./coverage/Summary.md)
+- [Testing coverage](https://github.com/anttieskola/MediatR_Reports/blob/main/code_coverage_md/Summary.md)
 
 ## Changes after fork
 
@@ -38,6 +38,10 @@ All development after fork is licensed under the Apache License, Version 2.0.
 ### 2025-11-24 - Sonerqube build
 - Added sonarqube build script and adjusted test projects to generate code coverage reports for sonarqube
 
+### 2025-11-29 - Report repository
+- Created separate repository for reports (code coverage etc)
+- Added it as submodule to this repository
+ 
 ## dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner

@@ -35,6 +35,10 @@ dotnet sonarscanner >nul 2>&1 || (
   exit /b 1
 )
 
+REM TODO: For some reason .sonarqube gets locked by dotnet process
+REM Kill all dotnet processes
+taskkill /f /im dotnet.exe
+
 REM Prepare workspace - clean previous analysis data
 if exist ".sonarqube" (
   echo "Removing .sonarqube"
@@ -54,6 +58,9 @@ if exist "coverage.xml" (
   echo "ERROR: Failed to remove coverage.xml"
   exit /b 1
 )
+
+REM Clean possible test results (used to generate reports)
+rmdir /S/Q test\MediatR.Tests\TestResults
 
 REM Begin Sonar
 dotnet sonarscanner begin ^
@@ -76,14 +83,34 @@ dotnet build || (
 )
 
 REM Test
-dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml" || (
+dotnet test --collect:"XPlat Code Coverage" --settings coverture.runsettings|| (
   echo Tests failed
+  exit /b 1
+)
+
+REM Merge coverage
+dotnet-coverage merge test/**/coverage.cobertura.xml -f cobertura -o coverage.xml|| (
+  echo Coverage merge failed
   exit /b 1
 )
 
 REM End Sonar
 dotnet sonarscanner end /d:sonar.token="%SONAR_TOKEN%" || (
   echo Sonar end failed
+  exit /b 1
+)
+
+REM Generate html (uses TestResults folder created by dotnet test)
+rmdir /S/Q submodules\MediatR_Reports\code_coverage_html
+reportgenerator -reports:"test/**/*.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_html" -reporttypes:"HtmlInline_AzurePipelines_Dark"||(
+  echo HTML report generation failed
+  exit /b 1
+)
+
+REM Generate markdown (uses TestResults folder created by dotnet test)
+rmdir /S/Q submodules\MediatR_Reports\code_coverage_md
+reportgenerator -reports:"test/**/*.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_md" -reporttypes:"MarkdownSummary"||(
+  echo Markdown report generation failed
   exit /b 1
 )
 
