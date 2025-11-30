@@ -11,43 +11,29 @@ namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class StreamPipelineTests
 {
-    public class OuterBehavior : IStreamPipelineBehavior<StreamPing, Pong>
+    public class OuterBehavior(Logger output) : IStreamPipelineBehavior<StreamPing, Pong>
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(StreamPing request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
+            output.Messages.Add("Outer before");
             await foreach (var response in next().WithCancellation(cancellationToken))
             {
                 yield return response;
             }
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer after");
         }
     }
 
-    public class InnerBehavior : IStreamPipelineBehavior<StreamPing, Pong>
+    public class InnerBehavior(Logger output) : IStreamPipelineBehavior<StreamPing, Pong>
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(StreamPing request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             await foreach (var response in next().WithCancellation(cancellationToken))
             {
                 yield return response;
             }
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
         }
     }
 
@@ -71,14 +57,14 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pang");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
     [Fact]
@@ -104,14 +90,14 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pang");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
 }

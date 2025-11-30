@@ -13,245 +13,156 @@ namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class PipelineTests
 {
-    public class OuterBehavior : IPipelineBehavior<Ping, Pong>
+    public class OuterBehavior(Logger output) : IPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
-            var response = await next();
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer before");
+            var response = await next(cancellationToken);
+            output.Messages.Add("Outer after");
 
             return response;
         }
     }
 
-    public class InnerBehavior : IPipelineBehavior<Ping, Pong>
+    public class InnerBehavior(Logger output) : IPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             var response = await next();
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
 
             return response;
         }
     }
 
-    public class OuterStreamBehavior : IStreamPipelineBehavior<Ping, Pong>
+    public class OuterStreamBehavior(Logger output) : IStreamPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public OuterStreamBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
+            output.Messages.Add("Outer before");
             await foreach (var item in next().WithCancellation(cancellationToken))
             {
                 yield return item;
             }
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer after");
         }
     }
 
-    public class InnerStreamBehavior : IStreamPipelineBehavior<Ping, Pong>
+    public class InnerStreamBehavior(Logger output) : IStreamPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public InnerStreamBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             await foreach (var item in next().WithCancellation(cancellationToken))
             {
                 yield return item;
             }
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
         }
     }
 
-    public class InnerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class InnerBehavior<TRequest, TResponse>(Logger output) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner generic before");
+            output.Messages.Add("Inner generic before");
             var response = await next();
-            _output.Messages.Add("Inner generic after");
+            output.Messages.Add("Inner generic after");
 
             return response;
         }
     }
 
-    public class OuterBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class OuterBehavior<TRequest, TResponse>(Logger output) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer generic before");
+            output.Messages.Add("Outer generic before");
             var response = await next();
-            _output.Messages.Add("Outer generic after");
+            output.Messages.Add("Outer generic after");
 
             return response;
         }
     }
 
-    public class ConstrainedBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class ConstrainedBehavior<TRequest, TResponse>(Logger output) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
         where TResponse : Pong
     {
-        private readonly Logger _output;
-
-        public ConstrainedBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Constrained before");
+            output.Messages.Add("Constrained before");
             var response = await next();
-            _output.Messages.Add("Constrained after");
+            output.Messages.Add("Constrained after");
 
             return response;
         }
     }
 
-    public class FirstPreProcessor<TRequest> : IRequestPreProcessor<TRequest> where TRequest : notnull
+    public class FirstPreProcessor<TRequest>(Logger output) : IRequestPreProcessor<TRequest> where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public FirstPreProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(TRequest request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("First pre processor");
+            output.Messages.Add("First pre processor");
             return Task.FromResult(0);
         }
     }
 
-    public class FirstConcretePreProcessor : IRequestPreProcessor<Ping>
+    public class FirstConcretePreProcessor(Logger output) : IRequestPreProcessor<Ping>
     {
-        private readonly Logger _output;
-
-        public FirstConcretePreProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(Ping request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("First concrete pre processor");
+            output.Messages.Add("First concrete pre processor");
             return Task.FromResult(0);
         }
     }
 
-    public class NextPreProcessor<TRequest> : IRequestPreProcessor<TRequest> where TRequest : notnull
+    public class NextPreProcessor<TRequest>(Logger output) : IRequestPreProcessor<TRequest> where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public NextPreProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(TRequest request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Next pre processor");
+            output.Messages.Add("Next pre processor");
             return Task.FromResult(0);
         }
     }
 
-    public class NextConcretePreProcessor : IRequestPreProcessor<Ping>
+    public class NextConcretePreProcessor(Logger output) : IRequestPreProcessor<Ping>
     {
-        private readonly Logger _output;
-
-        public NextConcretePreProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(Ping request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Next concrete pre processor");
+            output.Messages.Add("Next concrete pre processor");
             return Task.FromResult(0);
         }
     }
 
-    public class FirstPostProcessor<TRequest, TResponse> : IRequestPostProcessor<TRequest, TResponse>
+    public class FirstPostProcessor<TRequest, TResponse>(Logger output) : IRequestPostProcessor<TRequest, TResponse>
         where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public FirstPostProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(TRequest request, TResponse response, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("First post processor");
+            output.Messages.Add("First post processor");
             return Task.FromResult(0);
         }
     }
 
-    public class FirstConcretePostProcessor : IRequestPostProcessor<Ping, Pong>
+    public class FirstConcretePostProcessor(Logger output) : IRequestPostProcessor<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public FirstConcretePostProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(Ping request, Pong response, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("First concrete post processor");
+            output.Messages.Add("First concrete post processor");
             return Task.FromResult(0);
         }
     }
 
-    public class NextPostProcessor<TRequest, TResponse> : IRequestPostProcessor<TRequest, TResponse>
+    public class NextPostProcessor<TRequest, TResponse>(Logger output) : IRequestPostProcessor<TRequest, TResponse>
         where TRequest : notnull
     {
-        private readonly Logger _output;
+        private readonly Logger _output = output;
 
-        public NextPostProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(TRequest request, TResponse response, CancellationToken cancellationToken)
         {
             _output.Messages.Add("Next post processor");
@@ -259,72 +170,50 @@ public class PipelineTests
         }
     }
 
-    public class NextConcretePostProcessor : IRequestPostProcessor<Ping, Pong>
+    public class NextConcretePostProcessor(Logger output) : IRequestPostProcessor<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public NextConcretePostProcessor(Logger output)
-        {
-            _output = output;
-        }
         public Task Process(Ping request, Pong response, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Next concrete post processor");
+            output.Messages.Add("Next concrete post processor");
             return Task.FromResult(0);
         }
     }
 
-    public class PingPongGenericExceptionAction : IRequestExceptionAction<Ping, Exception>
+    public class PingPongGenericExceptionAction(Logger output) : IRequestExceptionAction<Ping, Exception>
     {
-        private readonly Logger _output;
-
-        public PingPongGenericExceptionAction(Logger output) => _output = output;
-
         public Task Execute(Ping request, Exception exception, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Logging generic exception");
+            output.Messages.Add("Logging generic exception");
 
             return Task.CompletedTask;
         }
     }
 
-    public class PingPongApplicationExceptionAction : IRequestExceptionAction<Ping, ApplicationException>
+    public class PingPongApplicationExceptionAction(Logger output) : IRequestExceptionAction<Ping, ApplicationException>
     {
-        private readonly Logger _output;
-
-        public PingPongApplicationExceptionAction(Logger output) => _output = output;
-
         public Task Execute(Ping request, ApplicationException exception, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Logging ApplicationException exception");
+            output.Messages.Add("Logging ApplicationException exception");
 
             return Task.CompletedTask;
         }
     }
 
-    public class PingPongExceptionActionForType1 : IRequestExceptionAction<Ping, SystemException>
+    public class PingPongExceptionActionForType1(Logger output) : IRequestExceptionAction<Ping, SystemException>
     {
-        private readonly Logger _output;
-
-        public PingPongExceptionActionForType1(Logger output) => _output = output;
-
         public Task Execute(Ping request, SystemException exception, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Logging exception 1");
+            output.Messages.Add("Logging exception 1");
 
             return Task.CompletedTask;
         }
     }
 
-    public class PingPongExceptionActionForType2 : IRequestExceptionAction<Ping, SystemException>
+    public class PingPongExceptionActionForType2(Logger output) : IRequestExceptionAction<Ping, SystemException>
     {
-        private readonly Logger _output;
-
-        public PingPongExceptionActionForType2(Logger output) => _output = output;
-
         public Task Execute(Ping request, SystemException exception, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Logging exception 2");
+            output.Messages.Add("Logging exception 2");
 
             return Task.CompletedTask;
         }
@@ -340,15 +229,11 @@ public class PipelineTests
         }
     }
 
-    public class PingPongGenericExceptionHandler : IRequestExceptionHandler<Ping, Pong, Exception>
+    public class PingPongGenericExceptionHandler(Logger output) : IRequestExceptionHandler<Ping, Pong, Exception>
     {
-        private readonly Logger _output;
-
-        public PingPongGenericExceptionHandler(Logger output) => _output = output;
-
         public Task Handle(Ping request, Exception exception, RequestExceptionHandlerState<Pong> state, CancellationToken cancellationToken)
         {
-            _output.Messages.Add(exception.Message + " Logged by Generic Type");
+            output.Messages.Add(exception.Message + " Logged by Generic Type");
 
             return Task.CompletedTask;
         }
@@ -409,14 +294,14 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
     [Fact]
@@ -443,14 +328,14 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -479,8 +364,8 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "First concrete pre processor",
             "Next concrete pre processor",
             "First pre processor",
@@ -490,7 +375,7 @@ public class PipelineTests
             "Next concrete post processor",
             "First post processor",
             "Next post processor",
-        });
+        ]);
     }
 
     [Fact]
@@ -594,8 +479,8 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "First concrete pre processor",
             "Next concrete pre processor",
             "First pre processor",
@@ -611,7 +496,7 @@ public class PipelineTests
             "Next concrete post processor",
             "First post processor",
             "Next post processor"
-        });
+        ]);
 
         output.Messages.Clear();
 
@@ -619,8 +504,8 @@ public class PipelineTests
 
         zingResponse.Message.ShouldBe("Zing Zong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "First pre processor",
             "Next pre processor",
             "Outer generic before",
@@ -630,26 +515,20 @@ public class PipelineTests
             "Outer generic after",
             "First post processor",
             "Next post processor"
-        });
+        ]);
     }
 
     [Fact]
     public void Should_throw_when_adding_non_open_behavior()
-    {
-        Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(NotAnOpenBehavior)));
-    }
+        => Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(NotAnOpenBehavior)));
 
     [Fact]
     public void Should_throw_when_adding_non_open_stream_behavior()
-    {
-        Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(NotAnOpenStreamBehavior)));
-    }
+        => Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(NotAnOpenStreamBehavior)));
 
     [Fact]
     public void Should_throw_when_adding_random_generic_type_as_open_behavior()
-    {
-        Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(List<string>)));
-    }
+        => Should.Throw<InvalidOperationException>(() => new MediatRServiceConfiguration().AddOpenBehavior(typeof(List<string>)));
 
     [Fact]
     public void Should_handle_open_behavior_registration()
@@ -891,15 +770,8 @@ public class PipelineTests
         public IList<string> Messages => _logger.Messages;
     }
 
-    public sealed class FooRequestHandler : IRequestHandler<FooRequest>
+    public sealed class FooRequestHandler(PipelineTests.IBlogger<PipelineTests.FooRequestHandler> logger) : IRequestHandler<FooRequest>
     {
-        public FooRequestHandler(IBlogger<FooRequestHandler> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<FooRequestHandler> logger;
-
         public Task Handle(FooRequest request, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked Handler");
@@ -907,15 +779,8 @@ public class PipelineTests
         }
     }
 
-    sealed class ClosedBehavior : IPipelineBehavior<FooRequest, Unit>
+    sealed class ClosedBehavior(PipelineTests.IBlogger<PipelineTests.ClosedBehavior> logger) : IPipelineBehavior<FooRequest, Unit>
     {
-        public ClosedBehavior(IBlogger<ClosedBehavior> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<ClosedBehavior> logger;
-
         public Task<Unit> Handle(FooRequest request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked Closed Behavior");
@@ -923,20 +788,13 @@ public class PipelineTests
         }
     }
 
-    sealed class Open2Behavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    sealed class Open2Behavior<TRequest, TResponse>(PipelineTests.IBlogger<PipelineTests.Open2Behavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        public Open2Behavior(IBlogger<Open2Behavior<TRequest, TResponse>> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<Open2Behavior<TRequest, TResponse>> logger;
-
         public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked Open Behavior");
-            return next();
+            return next(cancellationToken);
         }
     }
     [Fact]
@@ -965,62 +823,41 @@ public class PipelineTests
         var request = new FooRequest();
         await mediator.Send(request);
 
-        logger.Messages.ShouldBe(new[]
-        {
+        logger.Messages.ShouldBe(
+        [
             "Invoked Closed Behavior",
             "Invoked Open Behavior",
             "Invoked Handler",
-        });
+        ]);
     }
 
 
     #region OpenBehaviorsForMultipleRegistration
-    sealed class OpenBehaviorMultipleRegistration0<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    sealed class OpenBehaviorMultipleRegistration0<TRequest, TResponse>(PipelineTests.IBlogger<PipelineTests.OpenBehaviorMultipleRegistration0<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        public OpenBehaviorMultipleRegistration0(IBlogger<OpenBehaviorMultipleRegistration0<TRequest, TResponse>> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<OpenBehaviorMultipleRegistration0<TRequest, TResponse>> logger;
-
         public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked OpenBehaviorMultipleRegistration0");
-            return next();
+            return next(cancellationToken);
         }
     }
-    sealed class OpenBehaviorMultipleRegistration1<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    sealed class OpenBehaviorMultipleRegistration1<TRequest, TResponse>(PipelineTests.IBlogger<PipelineTests.OpenBehaviorMultipleRegistration1<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        public OpenBehaviorMultipleRegistration1(IBlogger<OpenBehaviorMultipleRegistration1<TRequest, TResponse>> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<OpenBehaviorMultipleRegistration1<TRequest, TResponse>> logger;
-
         public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked OpenBehaviorMultipleRegistration1");
-            return next();
+            return next(cancellationToken);
         }
     }
-    sealed class OpenBehaviorMultipleRegistration2<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    sealed class OpenBehaviorMultipleRegistration2<TRequest, TResponse>(PipelineTests.IBlogger<PipelineTests.OpenBehaviorMultipleRegistration2<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        public OpenBehaviorMultipleRegistration2(IBlogger<OpenBehaviorMultipleRegistration2<TRequest, TResponse>> logger)
-        {
-            this.logger = logger;
-        }
-
-        readonly IBlogger<OpenBehaviorMultipleRegistration2<TRequest, TResponse>> logger;
-
         public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             logger.Messages.Add("Invoked OpenBehaviorMultipleRegistration2");
-            return next();
+            return next(cancellationToken);
         }
     }
     #endregion OpenBehaviorsForMultipleRegistration
@@ -1056,12 +893,12 @@ public class PipelineTests
         var request = new FooRequest();
         await mediator.Send(request);
 
-        logger.Messages.ShouldBe(new[]
-        {
+        logger.Messages.ShouldBe(
+        [
             "Invoked OpenBehaviorMultipleRegistration0",
             "Invoked OpenBehaviorMultipleRegistration1",
             "Invoked OpenBehaviorMultipleRegistration2",
             "Invoked Handler",
-        });
+        ]);
     }
 }

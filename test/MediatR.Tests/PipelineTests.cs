@@ -35,142 +35,89 @@ public class PipelineTests
         public string? Message { get; set; }
     }
 
-    public class PingHandler : IRequestHandler<Ping, Pong>
+    public class PingHandler(PipelineTests.Logger output) : IRequestHandler<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public PingHandler(Logger output)
-        {
-            _output = output;
-        }
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             return Task.FromResult(new Pong { Message = request.Message + " Pong" });
         }
     }
 
-    public class VoidPingHandler : IRequestHandler<VoidPing>
+    public class VoidPingHandler(PipelineTests.Logger output) : IRequestHandler<VoidPing>
     {
-        private readonly Logger _output;
-
-        public VoidPingHandler(Logger output)
-        {
-            _output = output;
-        }
         public Task Handle(VoidPing request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             return Task.CompletedTask;
         }
     }
 
-    public class ZingHandler : IRequestHandler<Zing, Zong>
+    public class ZingHandler(PipelineTests.Logger output) : IRequestHandler<Zing, Zong>
     {
-        private readonly Logger _output;
-
-        public ZingHandler(Logger output)
-        {
-            _output = output;
-        }
         public Task<Zong> Handle(Zing request, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             return Task.FromResult(new Zong { Message = request.Message + " Zong" });
         }
     }
 
-    public class OuterBehavior : IPipelineBehavior<Ping, Pong>
+    public class OuterBehavior(PipelineTests.Logger output) : IPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
+            output.Messages.Add("Outer before");
             var response = await next();
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer after");
 
             return response;
         }
     }
 
-    public class OuterVoidBehavior : IPipelineBehavior<VoidPing, Unit>
+    public class OuterVoidBehavior(PipelineTests.Logger output) : IPipelineBehavior<VoidPing, Unit>
     {
-        private readonly Logger _output;
-
-        public OuterVoidBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Unit> Handle(VoidPing request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
+            output.Messages.Add("Outer before");
             var response = await next();
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer after");
 
             return response;
         }
     }
 
-    public class InnerBehavior : IPipelineBehavior<Ping, Pong>
+    public class InnerBehavior(PipelineTests.Logger output) : IPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             var response = await next();
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
 
             return response;
         }
     }
 
-    public class InnerVoidBehavior : IPipelineBehavior<VoidPing, Unit>
+    public class InnerVoidBehavior(PipelineTests.Logger output) : IPipelineBehavior<VoidPing, Unit>
     {
-        private readonly Logger _output;
-
-        public InnerVoidBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Unit> Handle(VoidPing request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             var response = await next();
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
 
             return response;
         }
     }
 
-    public class InnerBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class InnerBehavior<TRequest, TResponse>(PipelineTests.Logger output) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner generic before");
+            output.Messages.Add("Inner generic before");
             var response = await next();
-            _output.Messages.Add("Inner generic after");
+            output.Messages.Add("Inner generic after");
 
             return response;
         }
@@ -216,20 +163,13 @@ public class PipelineTests
         }
     }
 
-    public class ConcreteBehavior : IPipelineBehavior<Ping, Pong>
+    public class ConcreteBehavior(PipelineTests.Logger output) : IPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public ConcreteBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Concrete before");
+            output.Messages.Add("Concrete before");
             var response = await next();
-            _output.Messages.Add("Concrete after");
+            output.Messages.Add("Concrete after");
 
             return response;
         }
@@ -260,14 +200,14 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
     [Fact]
@@ -288,14 +228,14 @@ public class PipelineTests
 
         await mediator.Send(new VoidPing { Message = "Ping" });
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
     [Fact]
@@ -320,14 +260,14 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -351,14 +291,14 @@ public class PipelineTests
 
         await mediator.Send(new VoidPing { Message = "Ping" });
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -389,8 +329,8 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Constrained before",
@@ -398,7 +338,7 @@ public class PipelineTests
             "Constrained after",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
 
         output.Messages.Clear();
 
@@ -406,14 +346,14 @@ public class PipelineTests
 
         zingResponse.Message.ShouldBe("Zing Zong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -444,8 +384,8 @@ public class PipelineTests
 
         response.Message.ShouldBe("Ping Pong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Concrete before",
@@ -453,7 +393,7 @@ public class PipelineTests
             "Concrete after",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
 
         output.Messages.Clear();
 
@@ -461,13 +401,13 @@ public class PipelineTests
 
         zingResponse.Message.ShouldBe("Zing Zong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 }

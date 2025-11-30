@@ -31,15 +31,11 @@ public class CustomMediatorTests
 
     [Fact]
     public void ShouldResolveRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveNotificationHandlers()
-    {
-        _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
-    }
+        => _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
 
     [Fact]
     public void Can_Call_AddMediatr_multiple_times()

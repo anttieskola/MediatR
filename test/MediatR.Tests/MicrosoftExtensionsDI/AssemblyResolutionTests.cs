@@ -42,15 +42,11 @@ public class AssemblyResolutionTests
 
     [Fact]
     public void ShouldResolveNotificationHandlers()
-    {
-        _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
-    }
+        => _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
 
     [Fact]
     public void ShouldResolveStreamHandlers()
-    {
-        _provider.GetService<IStreamRequestHandler<StreamPing, Pong>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IStreamRequestHandler<StreamPing, Pong>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldRequireAtLeastOneAssembly()
@@ -64,25 +60,17 @@ public class AssemblyResolutionTests
 
     [Fact]
     public void ShouldResolveGenericVoidRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<OpenGenericVoidRequest<ConcreteTypeArgument>>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<OpenGenericVoidRequest<ConcreteTypeArgument>>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveGenericReturnTypeRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<OpenGenericReturnTypeRequest<ConcreteTypeArgument>, string>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<OpenGenericReturnTypeRequest<ConcreteTypeArgument>, string>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveGenericPingRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<GenericPing<Pong>, Pong>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<GenericPing<Pong>, Pong>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveVoidGenericPingRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<VoidGenericPing<Pong>>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<VoidGenericPing<Pong>>>().ShouldNotBeNull();
 }

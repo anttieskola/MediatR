@@ -9,8 +9,8 @@ namespace MediatR.Benchmarks
     public class Benchmarks
     {
         private IMediator _mediator;
-        private readonly Ping _request = new Ping {Message = "Hello World"};
-        private readonly Pinged _notification = new Pinged();
+        private readonly Ping _request = new() { Message = "Hello World" };
+        private readonly Pinged _notification = new();
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -31,15 +31,9 @@ namespace MediatR.Benchmarks
         }
 
         [Benchmark]
-        public Task SendingRequests()
-        {
-            return _mediator.Send(_request);
-        }
+        public Task SendingRequests() => _mediator.Send(_request);
 
         [Benchmark]
-        public Task PublishingNotifications()
-        {
-            return _mediator.Publish(_notification);
-        }
+        public Task PublishingNotifications() => _mediator.Publish(_notification);
     }
 }

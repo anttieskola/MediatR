@@ -10,8 +10,6 @@ namespace MediatR.Benchmarks
     public class PingedHandler : INotificationHandler<Pinged>
     {
         public Task Handle(Pinged notification, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
     }
 }

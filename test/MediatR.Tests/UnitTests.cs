@@ -46,24 +46,21 @@ public class UnitTests
         Assert.Equal(0, unit1.CompareTo(unit2));
     }
 
-    public static object[][] ValueData()
-    {
-        return new[]
-        {
-            new object[] {new object(), false},
-            new object[] {"", false},
-            new object[] {"()", false},
-            new object[] {null!, false},
-            new object[] {new Uri("https://www.google.com"), false},
-            new object[] {new Unit(), true},
-            new object[] {Unit.Value, true},
-            new object[] {Unit.Task.Result, true},
-            new object[] {default(Unit), true},
-        };
-    }
+    public static object[][] ValueData() =>
+        [
+            [new object(), false],
+            ["", false],
+            ["()", false],
+            [null!, false],
+            [new Uri("https://www.google.com"), false],
+            [new Unit(), true],
+            [Unit.Value, true],
+            [Unit.Task.Result, true],
+            [default(Unit), true],
+        ];
 
     public static object[][] CompareToValueData()
-        => ValueData().Select(objects => new[] { objects[0] }).ToArray();
+        => [.. ValueData().Select(objects => new[] { objects[0] })];
 
     [Theory]
     [MemberData(nameof(ValueData))]

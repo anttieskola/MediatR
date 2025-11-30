@@ -84,7 +84,7 @@ public abstract class BaseGenericRequestHandlerTests
     }
 
     protected static string[] GetGenericParameterNames(int numberOfTypeParameters) =>
-        Enumerable.Range(1, numberOfTypeParameters).Select(i => $"T{i}").ToArray();
+        [.. Enumerable.Range(1, numberOfTypeParameters).Select(i => $"T{i}")];
 
     protected static void CreateRequestHandler(ModuleBuilder moduleBuilder, string requestName, int numberOfTypeParameters, int numberOfInterfaces = 0, bool includeConstraints = true)
     {
@@ -123,7 +123,7 @@ public abstract class BaseGenericRequestHandlerTests
             "Handle",
             MethodAttributes.Public | MethodAttributes.Virtual,
             typeof(Task),
-            new[] { requestType, typeof(CancellationToken) });
+            [requestType, typeof(CancellationToken)]);
 
         ILGenerator ilGenerator = handleMethodBuilder.GetILGenerator();
 
@@ -165,13 +165,13 @@ public abstract class BaseGenericRequestHandlerTests
         return GenerateCombinationsRecursive(groups, 0);
     }
 
-    protected List<Type[]> GenerateCombinationsRecursive(List<Type>[] groups, int currentGroup)
+    protected static List<Type[]> GenerateCombinationsRecursive(List<Type>[] groups, int currentGroup)
     {
         var result = new List<Type[]>();
 
         if (currentGroup == groups.Length)
         {
-            result.Add(Array.Empty<Type>());
+            result.Add([]);
             return result;
         }
 
@@ -179,7 +179,7 @@ public abstract class BaseGenericRequestHandlerTests
         {
             foreach (var subCombination in GenerateCombinationsRecursive(groups, currentGroup + 1))
             {
-                result.Add(new[] { type }.Concat(subCombination).ToArray());
+                result.Add([type, .. subCombination]);
             }
         }
 
@@ -195,7 +195,7 @@ public abstract class BaseGenericRequestHandlerTests
         var groups = new List<string>[numberOfInterfaces];
         for (int i = 0; i < numberOfInterfaces; i++)
         {
-            groups[i] = testClasses.Where((t, index) => index % numberOfInterfaces == i).ToList();
+            groups[i] = [.. testClasses.Where((t, index) => index % numberOfInterfaces == i)];
         }
 
         return groups

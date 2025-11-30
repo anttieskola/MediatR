@@ -11,7 +11,7 @@ namespace MediatR.Tests;
 public class SendTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private Dependency _dependency;
+    private readonly Dependency _dependency;
     private readonly IMediator _mediator;
 
     public SendTests()
@@ -46,9 +46,7 @@ public class SendTests
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new Pong { Message = request.Message + " Pong" });
-        }
+            => Task.FromResult(new Pong { Message = request.Message + " Pong" });
     }
 
     public class Dependency
@@ -57,15 +55,11 @@ public class SendTests
         public bool CalledSpecific { get; set; }
     }
 
-    public class VoidPingHandler : IRequestHandler<VoidPing>
+    public class VoidPingHandler(SendTests.Dependency dependency) : IRequestHandler<VoidPing>
     {
-        private readonly Dependency _dependency;
-
-        public VoidPingHandler(Dependency dependency) => _dependency = dependency;
-
         public Task Handle(VoidPing request, CancellationToken cancellationToken)
         {
-            _dependency.Called = true;
+            dependency.Called = true;
 
             return Task.CompletedTask;
         }
@@ -77,16 +71,12 @@ public class SendTests
         public T? Pong { get; set; }
     }
 
-    public class GenericPingHandler<T> : IRequestHandler<GenericPing<T>, T>
+    public class GenericPingHandler<T>(SendTests.Dependency dependency) : IRequestHandler<GenericPing<T>, T>
         where T : Pong
     {
-        private readonly Dependency _dependency;
-
-        public GenericPingHandler(Dependency dependency) => _dependency = dependency;
-
         public Task<T> Handle(GenericPing<T> request, CancellationToken cancellationToken)
         {
-            _dependency.Called = true;
+            dependency.Called = true;
             request.Pong!.Message += " Pong";
             return Task.FromResult(request.Pong!);
         }
@@ -96,15 +86,12 @@ public class SendTests
         where T : Pong
     { }
 
-    public class VoidGenericPingHandler<T> : IRequestHandler<VoidGenericPing<T>>
+    public class VoidGenericPingHandler<T>(SendTests.Dependency dependency) : IRequestHandler<VoidGenericPing<T>>
         where T : Pong
     {
-        private readonly Dependency _dependency;
-        public VoidGenericPingHandler(Dependency dependency) => _dependency = dependency;
-
         public Task Handle(VoidGenericPing<T> request, CancellationToken cancellationToken)
         {
-            _dependency.Called = true;
+            dependency.Called = true;
 
             return Task.CompletedTask;
         }
@@ -115,15 +102,11 @@ public class SendTests
 
     }
 
-    public class TestClass1PingRequestHandler : IRequestHandler<VoidGenericPing<PongExtension>>
+    public class TestClass1PingRequestHandler(SendTests.Dependency dependency) : IRequestHandler<VoidGenericPing<PongExtension>>
     {
-        private readonly Dependency _dependency;
-
-        public TestClass1PingRequestHandler(Dependency dependency) => _dependency = dependency;
-
         public Task Handle(VoidGenericPing<PongExtension> request, CancellationToken cancellationToken)
         {
-            _dependency.CalledSpecific = true;
+            dependency.CalledSpecific = true;
             return Task.CompletedTask;
         }
     }
@@ -144,18 +127,15 @@ public class SendTests
         public int Foo { get; set; }
     }
 
-    public class MultipleGenericTypeParameterRequestHandler<T1, T2, T3> : IRequestHandler<MultipleGenericTypeParameterRequest<T1, T2, T3>, int>
+    public class MultipleGenericTypeParameterRequestHandler<T1, T2, T3>(SendTests.Dependency dependency)
+        : IRequestHandler<MultipleGenericTypeParameterRequest<T1, T2, T3>, int>
         where T1 : ITestInterface1
         where T2 : ITestInterface2
         where T3 : ITestInterface3
     {
-        private readonly Dependency _dependency;
-
-        public MultipleGenericTypeParameterRequestHandler(Dependency dependency) => _dependency = dependency;
-
         public Task<int> Handle(MultipleGenericTypeParameterRequest<T1, T2, T3> request, CancellationToken cancellationToken)
         {
-            _dependency.Called = true;
+            dependency.Called = true;
             return Task.FromResult(1);
         }
     }
@@ -165,10 +145,8 @@ public class SendTests
     {
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            using (var cts = new CancellationTokenSource(500))
-            {
-                return await next(cts.Token);
-            }
+            using var cts = new CancellationTokenSource(500);
+            return await next(cts.Token);
         }
     }
 
@@ -180,31 +158,23 @@ public class SendTests
     {
     }
 
-    public class TimeoutRequestHandler : IRequestHandler<TimeoutRequest>
+    public class TimeoutRequestHandler(SendTests.Dependency dependency) : IRequestHandler<TimeoutRequest>
     {
-        private readonly Dependency _dependency;
-
-        public TimeoutRequestHandler(Dependency dependency) => _dependency = dependency;
-
         public async Task Handle(TimeoutRequest request, CancellationToken cancellationToken)
         {
             await Task.Delay(2000, cancellationToken);
 
-            _dependency.Called = true;
+            dependency.Called = true;
         }
     }
 
-    public class TimeoutRequest2Handler : IRequestHandler<TimeoutRequest2, int>
+    public class TimeoutRequest2Handler(SendTests.Dependency dependency) : IRequestHandler<TimeoutRequest2, int>
     {
-        private readonly Dependency _dependency;
-
-        public TimeoutRequest2Handler(Dependency dependency) => _dependency = dependency;
-
         public async Task<int> Handle(TimeoutRequest2 request, CancellationToken cancellationToken)
         {
             await Task.Delay(2000, cancellationToken);
 
-            _dependency.Called = true;
+            dependency.Called = true;
             return 1;
         }
     }

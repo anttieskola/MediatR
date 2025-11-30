@@ -54,17 +54,13 @@ public class ExceptionTests
     public class NullPingHandler : IRequestHandler<NullPing, Pong>
     {
         public Task<Pong> Handle(NullPing request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new Pong());
-        }
+            => Task.FromResult(new Pong());
     }
 
     public class VoidNullPingHandler : IRequestHandler<VoidNullPing>
     {
         public Task Handle(VoidNullPing request, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
     }
 
     public ExceptionTests()
@@ -78,15 +74,11 @@ public class ExceptionTests
 
     [Fact]
     public async Task Should_throw_for_send()
-    {
-        await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new Ping()));
-    }
+        => await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new Ping()));
 
     [Fact]
     public async Task Should_throw_for_void_send()
-    {
-        await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new VoidPing()));
-    }
+        => await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new VoidPing()));
 
     [Fact]
     public async Task Should_not_throw_for_publish()
@@ -105,15 +97,11 @@ public class ExceptionTests
 
     [Fact]
     public async Task Should_throw_for_async_send()
-    {
-        await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new AsyncPing()));
-    }
+        => await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new AsyncPing()));
 
     [Fact]
     public async Task Should_throw_for_async_void_send()
-    {
-        await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new AsyncVoidPing()));
-    }
+        => await Should.ThrowAsync<InvalidOperationException>(async () => await _mediator.Send(new AsyncVoidPing()));
 
     [Fact]
     public async Task Should_not_throw_for_async_publish()
@@ -210,9 +198,7 @@ public class ExceptionTests
     public class PingExceptionHandler : IRequestHandler<PingException>
     {
         public Task Handle(PingException request, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
     }
 
     [Fact]
@@ -260,7 +246,7 @@ public class ExceptionTests
 
         var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
-        PingException pingException = new PingException();
+        PingException pingException = new();
 
         await Should.ThrowAsync<NotImplementedException>(async () => await mediator.Send(pingException));
     }

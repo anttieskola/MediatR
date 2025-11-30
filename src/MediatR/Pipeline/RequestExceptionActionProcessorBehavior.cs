@@ -74,8 +74,7 @@ public class RequestExceptionActionProcessorBehavior<TRequest, TResponse> : IPip
 
         var actionsForException = (IEnumerable<object>)_serviceProvider.GetRequiredService(enumerableExceptionActionInterfaceType);
 
-        return HandlersOrderer.Prioritize(actionsForException.ToList(), request)
-            .Select(action => (exceptionType, action));
+        return HandlersOrderer.Prioritize([.. actionsForException], request).Select(action => (exceptionType, action));
     }
 
     private static MethodInfo GetMethodInfoForAction(Type exceptionType)
@@ -83,9 +82,9 @@ public class RequestExceptionActionProcessorBehavior<TRequest, TResponse> : IPip
         var exceptionActionInterfaceType = typeof(IRequestExceptionAction<,>).MakeGenericType(typeof(TRequest), exceptionType);
 
         var actionMethodInfo =
-            exceptionActionInterfaceType.GetMethod(nameof(IRequestExceptionAction<TRequest, Exception>.Execute))
+            exceptionActionInterfaceType.GetMethod(nameof(IRequestExceptionAction<,>.Execute))
             ?? throw new InvalidOperationException(
-                $"Could not find method {nameof(IRequestExceptionAction<TRequest, Exception>.Execute)} on type {exceptionActionInterfaceType}");
+                $"Could not find method {nameof(IRequestExceptionAction<,>.Execute)} on type {exceptionActionInterfaceType}");
 
         return actionMethodInfo;
     }

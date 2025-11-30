@@ -5,16 +5,11 @@ using MediatR.NotificationPublishers;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace MediatR.Tests;
 
 public class NotificationPublisherTests
 {
-    private readonly ITestOutputHelper _output;
-
-    public NotificationPublisherTests(ITestOutputHelper output) => _output = output;
-
     public class Notification : INotification
     {
     }

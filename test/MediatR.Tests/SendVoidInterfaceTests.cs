@@ -15,14 +15,10 @@ public class SendVoidInterfaceTests
         public string? Message { get; set; }
     }
 
-    public class PingHandler : IRequestHandler<Ping>
+    public class PingHandler(TextWriter writer) : IRequestHandler<Ping>
     {
-        private readonly TextWriter _writer;
-
-        public PingHandler(TextWriter writer) => _writer = writer;
-
         public Task Handle(Ping request, CancellationToken cancellationToken)
-            => _writer.WriteAsync(request.Message + " Pong");
+            => writer.WriteAsync(request.Message + " Pong");
     }
 
     [Fact]

@@ -8,7 +8,9 @@ using MediatR.NotificationPublishers;
 using MediatR.Pipeline;
 using MediatR.Registration;
 
+#pragma warning disable IDE0130 // Namespace is on purpose for dependency injection extensions
 namespace Microsoft.Extensions.DependencyInjection;
+#pragma warning restore IDE0130 // Namespace is on purpose for dependency injection extensions
 
 public class MediatRServiceConfiguration
 {

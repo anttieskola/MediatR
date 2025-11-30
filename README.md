@@ -41,10 +41,30 @@ All development after fork is licensed under the Apache License, Version 2.0.
 ### 2025-11-29 - Report repository
 - Created separate repository for reports (code coverage etc)
 - Added it as submodule to this repository
- 
-## dotnet tools used
+
+### 2025-11-30 - Language version update
+- Updated C# language version to latest (12)
+- Took advantage of new features to simplify code where applicable
+
+## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner
 dotnet tool install --global dotnet-coverage
 dotnet tool install --global dotnet-reportgenerator-globaltool
 ```
+
+## Performance benchmarks
+
+### 2025-11-30
+```
+BenchmarkDotNet v0.13.10, Windows 11 (10.0.26100.7171)
+AMD Ryzen 5 5600G with Radeon Graphics, 1 CPU, 12 logical and 6 physical cores
+.NET SDK 10.0.100
+  [Host]     : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
+  DefaultJob : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
+
+```
+| Method                  | Mean      | Error    | StdDev   |
+|------------------------ |----------:|---------:|---------:|
+| SendingRequests         | 131.35 ns | 2.559 ns | 3.417 ns |
+| PublishingNotifications |  82.75 ns | 1.520 ns | 1.347 ns |

@@ -20,19 +20,14 @@ public class RequestExceptionHandlerTests
         public string? Message { get; set; }
     }
 
-    public class PingException : Exception
+    public class PingException(string? message) : Exception(message + " Thrown")
     {
-        public PingException(string? message) : base(message + " Thrown")
-        {
-        }
     }
 
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            throw new PingException(request.Message);
-        }
+            => throw new PingException(request.Message);
     }
 
     public class GenericPingExceptionHandler : IRequestExceptionHandler<Ping, Pong, Exception>
@@ -79,9 +74,7 @@ public class RequestExceptionHandlerTests
     public class PingPongThrowingExceptionHandler : IRequestExceptionHandler<Ping, Pong, Exception>
     {
         public Task Handle(Ping request, Exception exception, RequestExceptionHandlerState<Pong> state, CancellationToken token)
-        {
-            throw new ApplicationException("Surprise!");
-        }
+            => throw new ApplicationException("Surprise!");
     }
 
     [Fact]

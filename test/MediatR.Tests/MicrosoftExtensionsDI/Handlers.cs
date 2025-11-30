@@ -51,9 +51,7 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
     public class GenericHandler : INotificationHandler<INotification>
     {
         public Task Handle(INotification notification, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(0);
-        }
+            => Task.FromResult(0);
     }
 
     public class DingAsyncHandler : IRequestHandler<Ding>
@@ -64,17 +62,13 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
     public class PingedHandler : INotificationHandler<Pinged>
     {
         public Task Handle(Pinged notification, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
     }
 
     public class PingedAlsoHandler : INotificationHandler<Pinged>
     {
         public Task Handle(Pinged notification, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
     }
 
     public class PingedAlsoOpenHandler<TNotification> : INotificationHandler<TNotification>
@@ -85,20 +79,14 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
 
     public class Logger
     {
-        public IList<string> Messages { get; } = new List<string>();
+        public IList<string> Messages { get; } = [];
     }
 
-    public class PingHandler : IRequestHandler<Ping, Pong>
+    public class PingHandler(Logger logger) : IRequestHandler<Ping, Pong>
     {
-        private readonly Logger _logger;
-
-        public PingHandler(Logger logger)
-        {
-            _logger = logger;
-        }
         public Task<Pong> Handle(Ping message, CancellationToken cancellationToken)
         {
-            _logger.Messages.Add("Handler");
+            logger.Messages.Add("Handler");
 
             message.ThrowAction?.Invoke(message);
 
@@ -106,47 +94,29 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
         }
     }
 
-    public class DerivedPingHandler : IRequestHandler<DerivedPing, Pong>
+    public class DerivedPingHandler(Logger logger) : IRequestHandler<DerivedPing, Pong>
     {
-        private readonly Logger _logger;
-
-        public DerivedPingHandler(Logger logger)
-        {
-            _logger = logger;
-        }
         public Task<Pong> Handle(DerivedPing message, CancellationToken cancellationToken)
         {
-            _logger.Messages.Add("Handler");
+            logger.Messages.Add("Handler");
             return Task.FromResult(new Pong { Message = $"Derived{message.Message} Pong" });
         }
     }
 
-    public class ZingHandler : IRequestHandler<Zing, Zong>
+    public class ZingHandler(Logger output) : IRequestHandler<Zing, Zong>
     {
-        private readonly Logger _output;
-
-        public ZingHandler(Logger output)
-        {
-            _output = output;
-        }
         public Task<Zong> Handle(Zing message, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             return Task.FromResult(new Zong { Message = message.Message + " Zong" });
         }
     }
 
-    public class PingStreamHandler : IStreamRequestHandler<StreamPing, Pong>
+    public class PingStreamHandler(Logger output) : IStreamRequestHandler<StreamPing, Pong>
     {
-        private readonly Logger _output;
-
-        public PingStreamHandler(Logger output)
-        {
-            _output = output;
-        }
         public async IAsyncEnumerable<Pong> Handle(StreamPing request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             yield return await Task.Run(() => new Pong { Message = request.Message + " Pang" }, cancellationToken);
         }
     }
@@ -156,17 +126,13 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
     public class DuplicateHandler1 : IRequestHandler<DuplicateTest, string>
     {
         public Task<string> Handle(DuplicateTest message, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(nameof(DuplicateHandler1));
-        }
+            => Task.FromResult(nameof(DuplicateHandler1));
     }
 
     public class DuplicateHandler2 : IRequestHandler<DuplicateTest, string>
     {
         public Task<string> Handle(DuplicateTest message, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(nameof(DuplicateHandler2));
-        }
+            => Task.FromResult(nameof(DuplicateHandler2));
     }
 
     class InternalPingHandler : IRequestHandler<InternalPing>
@@ -176,41 +142,27 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
 
     class MyCustomMediator : IMediator
     {
-        public Task<object?> Send(object request, CancellationToken cancellationToken = new())
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<object?> Send(object request, CancellationToken cancellationToken = new()) 
+            => throw new System.NotImplementedException();
 
         public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request,
             CancellationToken cancellationToken = new())
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = new())
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public Task Publish(object notification, CancellationToken cancellationToken = new())
-        {
-            throw new System.NotImplementedException();
-        }
+            => throw new System.NotImplementedException();
 
         public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
-        {
-            throw new System.NotImplementedException();
-        }
+            => throw new System.NotImplementedException();
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-        {
-            throw new System.NotImplementedException();
-        }
+            => throw new System.NotImplementedException();
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
             where TRequest : IRequest
-        {
-            throw new System.NotImplementedException();
-        }
+            => throw new System.NotImplementedException();
     }
 
     interface ITypeArgument { }
@@ -271,17 +223,11 @@ namespace MediatR.Tests.MicrosoftExtensionsDI.Included
         public string? Message { get; init; }
     }
 
-    public class FooHandler : IRequestHandler<Foo, Bar>
+    public class FooHandler(Logger logger) : IRequestHandler<Foo, Bar>
     {
-        private readonly Logger _logger;
-
-        public FooHandler(Logger logger)
-        {
-            _logger = logger;
-        }
         public Task<Bar> Handle(Foo message, CancellationToken cancellationToken)
         {
-            _logger.Messages.Add("Handler");
+            logger.Messages.Add("Handler");
 
             message.ThrowAction?.Invoke(message);
 

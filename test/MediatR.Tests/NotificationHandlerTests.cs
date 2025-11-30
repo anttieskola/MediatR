@@ -13,19 +13,10 @@ public class NotificationHandlerTests
         public string? Message { get; set; }
     }
 
-    public class PongChildHandler : NotificationHandler<Ping>
+    public class PongChildHandler(TextWriter writer) : NotificationHandler<Ping>
     {
-        private readonly TextWriter _writer;
-
-        public PongChildHandler(TextWriter writer)
-        {
-            _writer = writer;
-        }
-
         protected override void Handle(Ping notification)
-        {
-            _writer.WriteLine(notification.Message + " Pong");
-        }
+            => writer.WriteLine(notification.Message + " Pong");
     }
 
     [Fact]

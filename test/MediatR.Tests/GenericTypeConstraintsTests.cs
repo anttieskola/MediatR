@@ -37,9 +37,7 @@ public class GenericTypeConstraintsTests
         }
 
         public Type[] Handle(TRequest request)
-        {
-            return typeof(TRequest).GetInterfaces();
-        }
+            => typeof(TRequest).GetInterfaces();
     }
 
     public class GenericTypeConstraintPing : GenericTypeRequestHandlerTestClass<Ping>
@@ -59,11 +57,9 @@ public class GenericTypeConstraintsTests
 
     public class JingHandler : IRequestHandler<Jing>
     {
-        public Task Handle(Jing request, CancellationToken cancellationToken)
-        {
+        public Task Handle(Jing request, CancellationToken cancellationToken) =>
             // empty handle
-            return Task.CompletedTask;
-        }
+            Task.CompletedTask;
     }
 
     public class Ping : IRequest<Pong>
@@ -79,9 +75,7 @@ public class GenericTypeConstraintsTests
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new Pong { Message = request.Message + " Pong" });
-        }
+            => Task.FromResult(new Pong { Message = request.Message + " Pong" });
     }
 
     private readonly IMediator _mediator;

@@ -16,13 +16,9 @@ using System.Threading.Tasks;
 /// </summary>
 /// <typeparam name="TRequest">Request type</typeparam>
 /// <typeparam name="TResponse">Response type</typeparam>
-public class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class RequestExceptionProcessorBehavior<TRequest, TResponse>(IServiceProvider serviceProvider) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public RequestExceptionProcessorBehavior(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
-
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         try
@@ -46,7 +42,7 @@ public class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineB
             {
                 try
                 {
-                    await ((Task) (handlerForException.MethodInfo.Invoke(handlerForException.Handler, new object[] { request, exception, state, cancellationToken })
+                    await ((Task) (handlerForException.MethodInfo.Invoke(handlerForException.Handler, [request, exception, state, cancellationToken])
                                    ?? throw new InvalidOperationException("Did not return a Task from the exception handler."))).ConfigureAwait(false);
                 }
                 catch (TargetInvocationException invocationException) when (invocationException.InnerException != null)
@@ -88,7 +84,7 @@ public class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineB
         var exceptionHandlerInterfaceType = typeof(IRequestExceptionHandler<,,>).MakeGenericType(typeof(TRequest), typeof(TResponse), exceptionType);
         var enumerableExceptionHandlerInterfaceType = typeof(IEnumerable<>).MakeGenericType(exceptionHandlerInterfaceType);
 
-        var exceptionHandlers = (IEnumerable<object>) _serviceProvider.GetRequiredService(enumerableExceptionHandlerInterfaceType);
+        var exceptionHandlers = (IEnumerable<object>) serviceProvider.GetRequiredService(enumerableExceptionHandlerInterfaceType);
 
         return HandlersOrderer.Prioritize(exceptionHandlers.ToList(), request)
             .Select(handler => (exceptionType, action: handler));
@@ -98,8 +94,8 @@ public class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineB
     {
         var exceptionHandlerInterfaceType = typeof(IRequestExceptionHandler<,,>).MakeGenericType(typeof(TRequest), typeof(TResponse), exceptionType);
         
-        var handleMethodInfo = exceptionHandlerInterfaceType.GetMethod(nameof(IRequestExceptionHandler<TRequest, TResponse, Exception>.Handle))
-                           ?? throw new InvalidOperationException($"Could not find method {nameof(IRequestExceptionHandler<TRequest, TResponse, Exception>.Handle)} on type {exceptionHandlerInterfaceType}");
+        var handleMethodInfo = exceptionHandlerInterfaceType.GetMethod(nameof(IRequestExceptionHandler<,,>.Handle))
+                           ?? throw new InvalidOperationException($"Could not find method {nameof(IRequestExceptionHandler<,,>.Handle)} on type {exceptionHandlerInterfaceType}");
 
         return handleMethodInfo;
     }

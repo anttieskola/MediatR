@@ -17,27 +17,16 @@ public class PublishTests
         public string? Message { get; set; }
     }
 
-    public class PongHandler : INotificationHandler<Ping>
+    public class PongHandler(TextWriter writer) : INotificationHandler<Ping>
     {
-        private readonly TextWriter _writer;
-
-        public PongHandler(TextWriter writer) => _writer = writer;
-
-        public Task Handle(Ping notification, CancellationToken cancellationToken) => _writer.WriteLineAsync(notification.Message + " Pong");
+        public Task Handle(Ping notification, CancellationToken cancellationToken) => writer.WriteLineAsync(notification.Message + " Pong");
     }
 
-    public class PungHandler : INotificationHandler<Ping>
+    public class PungHandler(TextWriter writer) : INotificationHandler<Ping>
     {
-        private readonly TextWriter _writer;
-
-        public PungHandler(TextWriter writer)
-        {
-            _writer = writer;
-        }
-
         public Task Handle(Ping notification, CancellationToken cancellationToken)
         {
-            return _writer.WriteLineAsync(notification.Message + " Pung");
+            return writer.WriteLineAsync(notification.Message + " Pung");
         }
     }
 
@@ -63,7 +52,7 @@ public class PublishTests
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
-        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var result = builder.ToString().Split([Environment.NewLine], StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }
@@ -91,18 +80,14 @@ public class PublishTests
         object message = new Ping { Message = "Ping" };
         await mediator.Publish(message);
 
-        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var result = builder.ToString().Split([Environment.NewLine], StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }
 
-    public class SequentialMediator : Mediator
+    public class SequentialMediator(IServiceProvider serviceProvider)
+        : Mediator(serviceProvider)
     {
-        public SequentialMediator(IServiceProvider serviceProvider)
-            : base(serviceProvider)
-        {
-        }
-
         protected override async Task PublishCore(IEnumerable<NotificationHandlerExecutor> allHandlers, INotification notification, CancellationToken cancellationToken)
         {
             foreach (var handler in allHandlers)
@@ -173,7 +158,7 @@ public class PublishTests
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
-        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var result = builder.ToString().Split([Environment.NewLine], StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
         publisher.CallCount.ShouldBe(2);
@@ -199,7 +184,7 @@ public class PublishTests
         var notifications = new INotification[] { new Ping { Message = "Ping" } };
         await mediator.Publish(notifications[0]);
 
-        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var result = builder.ToString().Split([Environment.NewLine], StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }
@@ -226,7 +211,7 @@ public class PublishTests
 
         await mediator.Publish(new Ping { Message = "Ping" });
 
-        var result = builder.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var result = builder.ToString().Split([Environment.NewLine], StringSplitOptions.None);
         result.ShouldContain("Ping Pong");
         result.ShouldContain("Ping Pung");
     }

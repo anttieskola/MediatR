@@ -46,142 +46,94 @@ public class StreamPipelineTests
         }
     }
 
-    public class ZingHandler : IStreamRequestHandler<Zing, Zong>
+    public class ZingHandler(StreamPipelineTests.Logger output) : IStreamRequestHandler<Zing, Zong>
     {
-        private readonly Logger _output;
-
-        public ZingHandler(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Zong> Handle(Zing request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Handler");
+            output.Messages.Add("Handler");
             yield return await Task.FromResult(new Zong { Message = request.Message + " Zong" });
         }
     }
 
-    public class OuterBehavior : IStreamPipelineBehavior<Ping, Pong>
+    public class OuterBehavior(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer before");
+            output.Messages.Add("Outer before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Outer after");
+            output.Messages.Add("Outer after");
         }
     }
 
-    public class InnerBehavior : IStreamPipelineBehavior<Ping, Pong>
+    public class InnerBehavior(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner before");
+            output.Messages.Add("Inner before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Inner after");
+            output.Messages.Add("Inner after");
         }
     }
 
-    public class InnerBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
+    public class InnerBehavior<TRequest, TResponse>(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<TRequest, TResponse>
         where TRequest : IStreamRequest<TResponse>
     {
-        private readonly Logger _output;
-
-        public InnerBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Inner generic before");
+            output.Messages.Add("Inner generic before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Inner generic after");
+            output.Messages.Add("Inner generic after");
         }
     }
 
-    public class OuterBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
+    public class OuterBehavior<TRequest, TResponse>(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<TRequest, TResponse>
         where TRequest : IStreamRequest<TResponse>
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Outer generic before");
+            output.Messages.Add("Outer generic before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Outer generic after");
+            output.Messages.Add("Outer generic after");
         }
     }
 
-    public class ConstrainedBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
+    public class ConstrainedBehavior<TRequest, TResponse>(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<TRequest, TResponse>
         where TRequest : Ping, IStreamRequest<TResponse>
         where TResponse : Pong
     {
-        private readonly Logger _output;
-
-        public ConstrainedBehavior(Logger output)
-        {
-            _output = output;
-        }
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Constrained before");
+            output.Messages.Add("Constrained before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Constrained after");
+            output.Messages.Add("Constrained after");
         }
     }
 
-    public class ConcreteBehavior : IStreamPipelineBehavior<Ping, Pong>
+    public class ConcreteBehavior(StreamPipelineTests.Logger output) : IStreamPipelineBehavior<Ping, Pong>
     {
-        private readonly Logger _output;
-
-        public ConcreteBehavior(Logger output)
-        {
-            _output = output;
-        }
-
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            _output.Messages.Add("Concrete before");
+            output.Messages.Add("Concrete before");
             await foreach (var result in next())
             {
                 yield return result;
             }
-            _output.Messages.Add("Concrete after");
+            output.Messages.Add("Concrete after");
         }
     }
 
@@ -211,14 +163,14 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer before",
             "Inner before",
             "Handler",
             "Inner after",
             "Outer after"
-        });
+        ]);
     }
 
     [Fact]
@@ -243,14 +195,14 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -276,8 +228,8 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Constrained before",
@@ -285,7 +237,7 @@ public class StreamPipelineTests
             "Constrained after",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
 
         output.Messages.Clear();
 
@@ -294,14 +246,14 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Zing Zong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 
     [Fact]
@@ -327,8 +279,8 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Ping Pong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Concrete before",
@@ -336,7 +288,7 @@ public class StreamPipelineTests
             "Concrete after",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
 
         output.Messages.Clear();
 
@@ -345,13 +297,13 @@ public class StreamPipelineTests
             response.Message.ShouldBe("Zing Zong");
         }
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "Outer generic before",
             "Inner generic before",
             "Handler",
             "Inner generic after",
             "Outer generic after",
-        });
+        ]);
     }
 }

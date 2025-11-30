@@ -20,33 +20,22 @@ public class RequestExceptionActionTests
         public string? Message { get; set; }
     }
 
-    public abstract class PingPongException : Exception
+    public abstract class PingPongException(string? message) : Exception(message + " Thrown")
     {
-        protected PingPongException(string? message) : base(message + " Thrown")
-        {
-        }
     }
 
-    public class PingException : PingPongException
+    public class PingException(string? message) : PingPongException(message)
     {
-        public PingException(string? message) : base(message)
-        {
-        }
     }
 
-    public class PongException : PingPongException
+    public class PongException(string message) : PingPongException(message)
     {
-        public PongException(string message) : base(message)
-        {
-        }
     }
 
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            throw new PingException(request.Message);
-        }
+            => throw new PingException(request.Message);
     }
 
     public class GenericExceptionAction<TRequest> : IRequestExceptionAction<TRequest, Exception> where TRequest : notnull

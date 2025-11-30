@@ -8,18 +8,14 @@ namespace MediatR.Tests.MicrosoftExtensionsDI;
 
 public class PipelineMultiCallToConstructorTests
 {
-    public class ConstructorTestBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class ConstructorTestBehavior<TRequest, TResponse>(Logger output) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        private readonly Logger _output;
-
-        public ConstructorTestBehavior(Logger output) => _output = output;
-
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            _output.Messages.Add("ConstructorTestBehavior before");
+            output.Messages.Add("ConstructorTestBehavior before");
             var response = await next();
-            _output.Messages.Add("ConstructorTestBehavior after");
+            output.Messages.Add("ConstructorTestBehavior after");
 
             return response;
         }
@@ -92,12 +88,12 @@ public class PipelineMultiCallToConstructorTests
 
         response.Message.ShouldBe("ConstructorPing ConstructorPong");
 
-        output.Messages.ShouldBe(new[]
-        {
+        output.Messages.ShouldBe(
+        [
             "ConstructorTestBehavior before",
             "Handler",
             "ConstructorTestBehavior after"
-        });
+        ]);
         ConstructorTestHandler.ConstructorCallCount.ShouldBe(1);
     }
 }

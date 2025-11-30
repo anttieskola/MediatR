@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
@@ -34,10 +33,7 @@ namespace MediatR.Benchmarks
 
         private readonly string _saveLocation;
 
-        public DotTraceDiagnoser()
-        {
-            _saveLocation = $"C:\\temp\\MediatR\\{DateTimeOffset.Now.UtcDateTime:yyyy-MM-dd-HH_mm_ss}.bench.dtp";
-        }
+        public DotTraceDiagnoser() => _saveLocation = $"{Path.GetTempPath}\\MediatR\\{DateTimeOffset.Now.UtcDateTime:yyyy-MM-dd-HH_mm_ss}.bench.dtp";
 
         /// <inheritdoc />
         public RunMode GetRunMode(BenchmarkCase benchmarkCase) => RunMode.ExtraRun;
@@ -83,37 +79,33 @@ namespace MediatR.Benchmarks
             dotTrace.Exited += (sender, args) => dotTrace.Dispose();
         }
 
-        private ProcessStartInfo PrepareProcessStartInfo(DiagnoserActionParameters parameters)
-        {
-            return new ProcessStartInfo(
+        private ProcessStartInfo PrepareProcessStartInfo(DiagnoserActionParameters parameters) => new(
                 "dottrace",
                 $"attach {parameters.Process.Id} --save-to={_saveLocation}")
-            {
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-        }
+        {
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
 
         /// <inheritdoc />
-        public IEnumerable<Metric> ProcessResults(DiagnoserResults results) => Enumerable.Empty<Metric>();
+        public IEnumerable<Metric> ProcessResults(DiagnoserResults results) => [];
 
         /// <inheritdoc />
         public void DisplayResults(ILogger logger) { }
 
         /// <inheritdoc />
-        public IEnumerable<ValidationError> Validate(ValidationParameters validationParameters) =>
-            Enumerable.Empty<ValidationError>();
+        public IEnumerable<ValidationError> Validate(ValidationParameters validationParameters) => [];
 
         /// <inheritdoc />
-        public IEnumerable<string> Ids => new[] { nameof(DotTraceDiagnoser) };
+        public IEnumerable<string> Ids => [nameof(DotTraceDiagnoser)];
 
         /// <inheritdoc />
-        public IEnumerable<IExporter> Exporters => Enumerable.Empty<IExporter>();
+        public IEnumerable<IExporter> Exporters => [];
 
-        public IEnumerable<IAnalyser> Analysers { get; } = Enumerable.Empty<IAnalyser>();
+        public IEnumerable<IAnalyser> Analysers { get; } = [];
 
         private static bool CanRunDotTrace()
         {

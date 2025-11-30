@@ -4,7 +4,9 @@ using MediatR;
 using MediatR.Pipeline;
 using MediatR.Registration;
 
+#pragma warning disable IDE0130 // Namespace is on purpose for dependency injection extensions
 namespace Microsoft.Extensions.DependencyInjection;
+#pragma warning restore IDE0130 // Namespace is on purpose for dependency injection extensions
 
 /// <summary>
 /// Extensions to scan for MediatR handlers and registers them.
@@ -42,7 +44,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMediatR(this IServiceCollection services, 
         MediatRServiceConfiguration configuration)
     {
-        if (!configuration.AssembliesToRegister.Any())
+        if (configuration.AssembliesToRegister.Count == 0)
         {
             throw new ArgumentException("No assemblies found to scan. Supply at least one assembly to scan for handlers.");
         }
