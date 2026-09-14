@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "storage",
+        "projectKey": "MediatR"
+    }
+}
