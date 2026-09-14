@@ -17,6 +17,9 @@ All development after fork is licensed under the Apache License, Version 2.0.
 
 **Can be used as drop-in replacement for MediatR library**
 
+## Documentation
+- [Documentation](./docs/Functionality.md)
+
 ## Testing
 - [Testing coverage](https://github.com/anttieskola/MediatR_Reports/blob/main/code_coverage_md/Summary.md)
 
@@ -45,6 +48,9 @@ All development after fork is licensed under the Apache License, Version 2.0.
 ### 2025-11-30 - Language version update
 - Updated C# language version to latest (12)
 - Took advantage of new features to simplify code where applicable
+
+### 2026-09-14 - Generating documentation
+- Testing out document generation with AI
 
 ## Dotnet tools used
 ```bash
