@@ -52,6 +52,12 @@ All development after fork is licensed under the Apache License, Version 2.0.
 ### 2026-09-14 - Generating documentation
 - Testing out document generation with AI
 
+### 2026-09-15 - Framework and dependency updates
+- Removed support for `netstandard2.0` from the project files and build configurations
+  - To get access to latest language features and old framework support is not required anymore
+- Upgraded to latest .NET 10 patch version
+- xUnit upgrade
+
 ## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner

@@ -70,7 +70,7 @@ dotnet sonarscanner begin ^
   /d:sonar.inclusions="**/src/**" ^
   /d:sonar.exclusions="**/samples/**,**/test/**" ^
   /d:sonar.coverage.exclusions="**/samples/**,**/test/**" ^
-  /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+  /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.xml"  
 if errorlevel 1 (
   echo Sonar begin failed
   exit /b 1
@@ -82,15 +82,19 @@ dotnet build || (
   exit /b 1
 )
 
-REM Test
-dotnet test --collect:"XPlat Code Coverage" --settings coverture.runsettings|| (
-  echo Tests failed
-  exit /b 1
+REM Test coverage for sonarqube
+dotnet-coverage collect "dotnet test" -f xml -o "TestResults\coverage.xml" || (
+   echo Tests failed
+   exit /b 1
 )
 
-REM Merge coverage
-dotnet-coverage merge test/**/coverage.cobertura.xml -f cobertura -o coverage.xml|| (
-  echo Coverage merge failed
+
+REM Test Coverage as Cobertura for report generation
+REM Sonarqube for some reason does not work anymore with cobertura even tho it should have support,
+REM here is the parameter to try it:
+REM /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.cobertura.xml"
+dotnet test -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml|| (
+  echo Tests failed
   exit /b 1
 )
 
@@ -102,14 +106,14 @@ dotnet sonarscanner end /d:sonar.token="%SONAR_TOKEN%" || (
 
 REM Generate html (uses TestResults folder created by dotnet test)
 rmdir /S/Q submodules\MediatR_Reports\code_coverage_html
-reportgenerator -reports:"test/**/*.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_html" -reporttypes:"HtmlInline_AzurePipelines_Dark"||(
+reportgenerator -reports:"TestResults/coverage.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_html" -reporttypes:"HtmlInline_AzurePipelines_Dark"||(
   echo HTML report generation failed
   exit /b 1
 )
 
 REM Generate markdown (uses TestResults folder created by dotnet test)
 rmdir /S/Q submodules\MediatR_Reports\code_coverage_md
-reportgenerator -reports:"test/**/*.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_md" -reporttypes:"MarkdownSummary"||(
+reportgenerator -reports:"TestResults/coverage.cobertura.xml" -targetdir:"submodules\MediatR_Reports\code_coverage_md" -reporttypes:"MarkdownSummary"||(
   echo Markdown report generation failed
   exit /b 1
 )

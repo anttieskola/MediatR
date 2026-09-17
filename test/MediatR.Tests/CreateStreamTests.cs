@@ -41,7 +41,7 @@ public class CreateStreamTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = mediator.CreateStream(new Ping { Message = "Ping" });
+        var response = mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
         int i = 0;
         await foreach (Pong result in response)
         {
@@ -68,7 +68,7 @@ public class CreateStreamTests
         var mediator = provider.GetRequiredService<IMediator>();
 
         object request = new Ping { Message = "Ping" };
-        var response = mediator.CreateStream(request);
+        var response = mediator.CreateStream(request, TestContext.Current.CancellationToken);
         int i = 0;
         await foreach (Pong? result in response)
         {
@@ -94,7 +94,7 @@ public class CreateStreamTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<ISender>();
 
-        var response = mediator.CreateStream(new Ping { Message = "Ping" });
+        var response = mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
         int i = 0;
         await foreach (Pong result in response)
         {

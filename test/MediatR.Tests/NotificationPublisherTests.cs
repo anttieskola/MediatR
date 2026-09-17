@@ -40,7 +40,7 @@ public class NotificationPublisherTests
         var timer = new Stopwatch();
         timer.Start();
 
-        await mediator.Publish(new Notification());
+        await mediator.Publish(new Notification(), TestContext.Current.CancellationToken);
 
         timer.Stop();
 
@@ -58,7 +58,7 @@ public class NotificationPublisherTests
 
         timer.Restart();
 
-        await mediator.Publish(new Notification());
+        await mediator.Publish(new Notification(), TestContext.Current.CancellationToken);
 
         timer.Stop();
 

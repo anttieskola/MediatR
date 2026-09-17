@@ -158,7 +158,7 @@ public class StreamPipelineTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
+        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -190,7 +190,7 @@ public class StreamPipelineTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
+        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -223,7 +223,7 @@ public class StreamPipelineTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
+        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -241,7 +241,7 @@ public class StreamPipelineTests
 
         output.Messages.Clear();
 
-        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }))
+        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Zing Zong");
         }
@@ -274,7 +274,7 @@ public class StreamPipelineTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }))
+        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -292,7 +292,7 @@ public class StreamPipelineTests
 
         output.Messages.Clear();
 
-        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }))
+        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Zing Zong");
         }
