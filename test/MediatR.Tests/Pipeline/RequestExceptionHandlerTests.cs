@@ -96,7 +96,7 @@ public class RequestExceptionHandlerTests
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Thrown Handled by Type");
     }

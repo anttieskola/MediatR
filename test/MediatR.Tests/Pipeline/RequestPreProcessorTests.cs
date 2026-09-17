@@ -56,7 +56,7 @@ public class RequestPreProcessorTests
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
         response.Message.ShouldBe("Ping Ping Pong");
     }
 

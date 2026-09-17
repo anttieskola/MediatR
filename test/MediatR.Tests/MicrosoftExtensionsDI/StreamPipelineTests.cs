@@ -50,7 +50,7 @@ public class StreamPipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" });
+        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         await foreach (var response in stream)
         {
@@ -83,7 +83,7 @@ public class StreamPipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" });
+        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         await foreach (var response in stream)
         {

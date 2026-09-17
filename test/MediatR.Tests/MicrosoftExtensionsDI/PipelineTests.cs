@@ -290,7 +290,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -324,7 +324,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -360,7 +360,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -389,7 +389,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping", ThrowAction = msg => throw new ApplicationException(msg.Message + " Thrown") });
+        var response = await mediator.Send(new Ping { Message = "Ping", ThrowAction = msg => throw new ApplicationException(msg.Message + " Thrown") }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Thrown Handled by Specific Type");
         output.Messages.ShouldNotContain("Logging ApplicationException exception");
@@ -475,7 +475,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" });
+        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -500,7 +500,7 @@ public class PipelineTests
 
         output.Messages.Clear();
 
-        var zingResponse = await mediator.Send(new Zing { Message = "Zing" });
+        var zingResponse = await mediator.Send(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken);
 
         zingResponse.Message.ShouldBe("Zing Zong");
 
@@ -821,7 +821,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
         var request = new FooRequest();
-        await mediator.Send(request);
+        await mediator.Send(request, TestContext.Current.CancellationToken);
 
         logger.Messages.ShouldBe(
         [
@@ -891,7 +891,7 @@ public class PipelineTests
 
         var mediator = provider.GetRequiredService<IMediator>();
         var request = new FooRequest();
-        await mediator.Send(request);
+        await mediator.Send(request, TestContext.Current.CancellationToken);
 
         logger.Messages.ShouldBe(
         [

@@ -80,4 +80,4 @@ src/MediatR/
 
 ## Target Frameworks
 
-`netstandard2.0` and `net10.0`. See [`src/MediatR/MediatR.csproj`](../src/MediatR/MediatR.csproj).
+`net10.0`. See [`src/MediatR/MediatR.csproj`](../src/MediatR/MediatR.csproj).
