@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace MediatR.Examples.ExceptionHandler;
 
-public class CommonExceptionHandler : IRequestExceptionHandler<PingResource, Pong, Exception>
+public class CommonExceptionHandler(TextWriter writer) : IRequestExceptionHandler<PingResource, Pong, Exception>
 {
-    private readonly TextWriter _writer;
-
-    public CommonExceptionHandler(TextWriter writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public async Task Handle(PingResource request,
         Exception exception,
@@ -25,11 +23,9 @@ public class CommonExceptionHandler : IRequestExceptionHandler<PingResource, Pon
     }
 }
 
-public class ConnectionExceptionHandler : IRequestExceptionHandler<PingResource, Pong, ConnectionException>
+public class ConnectionExceptionHandler(TextWriter writer) : IRequestExceptionHandler<PingResource, Pong, ConnectionException>
 {
-    private readonly TextWriter _writer;
-
-    public ConnectionExceptionHandler(TextWriter writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public async Task Handle(PingResource request,
         ConnectionException exception,
@@ -44,11 +40,9 @@ public class ConnectionExceptionHandler : IRequestExceptionHandler<PingResource,
     }
 }
 
-public class AccessDeniedExceptionHandler : IRequestExceptionHandler<PingResource, Pong, ForbiddenException>
+public class AccessDeniedExceptionHandler(TextWriter writer) : IRequestExceptionHandler<PingResource, Pong, ForbiddenException>
 {
-    private readonly TextWriter _writer;
-
-    public AccessDeniedExceptionHandler(TextWriter writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public async Task Handle(PingResource request,
         ForbiddenException exception,
@@ -63,11 +57,9 @@ public class AccessDeniedExceptionHandler : IRequestExceptionHandler<PingResourc
     }
 }
 
-public class ServerExceptionHandler : IRequestExceptionHandler<PingNewResource, Pong, ServerException>
+public class ServerExceptionHandler(TextWriter writer) : IRequestExceptionHandler<PingNewResource, Pong, ServerException>
 {
-    private readonly TextWriter _writer;
-
-    public ServerExceptionHandler(TextWriter writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public virtual async Task Handle(PingNewResource request,
         ServerException exception,

@@ -1,11 +1,11 @@
-using System.Reflection;
-using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Linq;
-using Shouldly;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MediatR.Tests;
 
@@ -82,15 +82,15 @@ public class GenericTypeConstraintsTests
 
     public GenericTypeConstraintsTests()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
         // Register the concrete request handlers used in these tests
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestHandler<Jing>, JingHandler>();
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestHandler<Jing>, JingHandler>();
 
         // Mediator expects an IServiceProvider; register it so tests can resolve IMediator/ISender
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         _mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
     }
@@ -99,13 +99,13 @@ public class GenericTypeConstraintsTests
     public async Task Should_Resolve_Void_Return_Request()
     {
         // Create Request
-        var jing = new Jing { Message = "Jing" };
+        Jing jing = new() { Message = "Jing" };
 
         // Test mediator still works sending request
         await _mediator.Send(jing, TestContext.Current.CancellationToken);
 
         // Create new instance of type constrained class
-        var genericTypeConstraintsVoidReturn = new GenericTypeConstraintJing();
+        GenericTypeConstraintJing genericTypeConstraintsVoidReturn = new();
 
         // Assert it is of type IRequest and IRequest<T>
         Assert.True(genericTypeConstraintsVoidReturn.IsIRequest);
@@ -126,14 +126,14 @@ public class GenericTypeConstraintsTests
     public async Task Should_Resolve_Response_Return_Request()
     {
         // Create Request
-        var ping = new Ping { Message = "Ping" };
+        Ping ping = new() { Message = "Ping" };
 
         // Test mediator still works sending request and gets response
         var pingResponse = await _mediator.Send(ping, TestContext.Current.CancellationToken);
         pingResponse.Message.ShouldBe("Ping Pong");
 
         // Create new instance of type constrained class
-        var genericTypeConstraintsResponseReturn = new GenericTypeConstraintPing();
+        GenericTypeConstraintPing genericTypeConstraintsResponseReturn = new();
 
         // Assert it is of type IRequest<T> but not IRequest
         Assert.False(genericTypeConstraintsResponseReturn.IsIRequest);

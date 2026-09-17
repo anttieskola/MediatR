@@ -1,10 +1,9 @@
-﻿namespace MediatR;
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
+namespace MediatR;
 /// <summary>
-/// Represents a void type, since <see cref="System.Void"/> is not a valid return type in C#.
+/// Represents a void type, since <see cref="void"/> is not a valid return type in C#.
 /// </summary>
 public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
 {
@@ -64,11 +63,11 @@ public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     public bool Equals(Unit other) => true;
 
     /// <summary>
-    /// Determines whether the specified <see cref="System.Object" /> is equal to this instance.
+    /// Determines whether the specified <see cref="object" /> is equal to this instance.
     /// </summary>
     /// <param name="obj">The object to compare with the current instance.</param>
     /// <returns>
-    /// <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+    /// <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
     /// </returns>
     public override bool Equals(object? obj) => obj is Unit;
 
@@ -78,7 +77,10 @@ public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     /// <param name="first">The first object.</param>
     /// <param name="second">The second object.</param>
     /// <c>true</c> if the <paramref name="first"/> object is equal to the <paramref name="second" /> object; otherwise, <c>false</c>.
-    public static bool operator ==(Unit first, Unit second) => true;
+    public static bool operator ==(Unit first, Unit second)
+    {
+        return true;
+    }
 
     /// <summary>
     /// Determines whether the <paramref name="first"/> object is not equal to the <paramref name="second"/> object.
@@ -86,11 +88,58 @@ public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     /// <param name="first">The first object.</param>
     /// <param name="second">The second object.</param>
     /// <c>true</c> if the <paramref name="first"/> object is not equal to the <paramref name="second" /> object; otherwise, <c>false</c>.
-    public static bool operator !=(Unit first, Unit second) => false;
+    public static bool operator !=(Unit first, Unit second)
+    {
+        return false;
+    }
 
     /// <summary>
-    /// Returns a <see cref="System.String" /> that represents this instance.
+    /// Determines whether the <paramref name="first"/> object is less than the <paramref name="second"/> object.
     /// </summary>
-    /// <returns>A <see cref="System.String" /> that represents this instance.</returns>
+    /// <param name="first">The first object.</param>
+    /// <param name="second">The second object.</param>
+    /// <c>false</c>, since all <see cref="Unit"/> values are equal.
+    public static bool operator <(Unit first, Unit second)
+    {
+        return false;
+    }
+
+    /// <summary>
+    /// Determines whether the <paramref name="first"/> object is less than or equal to the <paramref name="second"/> object.
+    /// </summary>
+    /// <param name="first">The first object.</param>
+    /// <param name="second">The second object.</param>
+    /// <c>true</c>, since all <see cref="Unit"/> values are equal.
+    public static bool operator <=(Unit first, Unit second)
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// Determines whether the <paramref name="first"/> object is greater than the <paramref name="second"/> object.
+    /// </summary>
+    /// <param name="first">The first object.</param>
+    /// <param name="second">The second object.</param>
+    /// <c>false</c>, since all <see cref="Unit"/> values are equal.
+    public static bool operator >(Unit first, Unit second)
+    {
+        return false;
+    }
+
+    /// <summary>
+    /// Determines whether the <paramref name="first"/> object is greater than or equal to the <paramref name="second"/> object.
+    /// </summary>
+    /// <param name="first">The first object.</param>
+    /// <param name="second">The second object.</param>
+    /// <c>true</c>, since all <see cref="Unit"/> values are equal.
+    public static bool operator >=(Unit first, Unit second)
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// Returns a <see cref="string" /> that represents this instance.
+    /// </summary>
+    /// <returns>A <see cref="string" /> that represents this instance.</returns>
     public override string ToString() => "()";
 }

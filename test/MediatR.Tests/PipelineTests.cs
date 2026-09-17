@@ -1,9 +1,8 @@
-using System.Threading;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -67,7 +66,7 @@ public class PipelineTests
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Outer before");
-            var response = await next();
+            Pong response = await next(cancellationToken);
             output.Messages.Add("Outer after");
 
             return response;
@@ -79,7 +78,7 @@ public class PipelineTests
         public async Task<Unit> Handle(VoidPing request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Outer before");
-            var response = await next();
+            Unit response = await next(cancellationToken);
             output.Messages.Add("Outer after");
 
             return response;
@@ -91,7 +90,7 @@ public class PipelineTests
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner before");
-            var response = await next();
+            Pong response = await next(cancellationToken);
             output.Messages.Add("Inner after");
 
             return response;
@@ -103,7 +102,7 @@ public class PipelineTests
         public async Task<Unit> Handle(VoidPing request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner before");
-            var response = await next();
+            Unit response = await next(cancellationToken);
             output.Messages.Add("Inner after");
 
             return response;
@@ -116,47 +115,39 @@ public class PipelineTests
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner generic before");
-            var response = await next();
+            TResponse? response = await next(cancellationToken);
             output.Messages.Add("Inner generic after");
 
             return response;
         }
     }
 
-    public class OuterBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+    public class OuterBehavior<TRequest, TResponse>(PipelineTests.Logger output)
+        : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
     {
-        private readonly Logger _output;
-
-        public OuterBehavior(Logger output)
-        {
-            _output = output;
-        }
+        private readonly Logger _output = output;
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             _output.Messages.Add("Outer generic before");
-            var response = await next();
+            TResponse? response = await next(cancellationToken);
             _output.Messages.Add("Outer generic after");
 
             return response;
         }
     }
 
-    public class ConstrainedBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class ConstrainedBehavior<TRequest, TResponse>(PipelineTests.Logger output)
+        : IPipelineBehavior<TRequest, TResponse>
         where TRequest : Ping
         where TResponse : Pong
     {
-        private readonly Logger _output;
-
-        public ConstrainedBehavior(Logger output)
-        {
-            _output = output;
-        }
+        private readonly Logger _output = output;
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             _output.Messages.Add("Constrained before");
-            var response = await next();
+            TResponse response = await next(cancellationToken);
             _output.Messages.Add("Constrained after");
 
             return response;
@@ -168,7 +159,7 @@ public class PipelineTests
         public async Task<Pong> Handle(Ping request, RequestHandlerDelegate<Pong> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("Concrete before");
-            var response = await next();
+            Pong response = await next(cancellationToken);
             output.Messages.Add("Concrete after");
 
             return response;
@@ -177,26 +168,26 @@ public class PipelineTests
 
     public class Logger
     {
-        public IList<string> Messages { get; } = new List<string>();
+        public IList<string> Messages { get; } = [];
     }
 
     [Fact]
     public async Task Should_wrap_with_behavior()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IPipelineBehavior<Ping, Pong>, OuterBehavior>();
-        services.AddSingleton<IPipelineBehavior<Ping, Pong>, InnerBehavior>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IPipelineBehavior<Ping, Pong>, OuterBehavior>();
+        _ = services.AddSingleton<IPipelineBehavior<Ping, Pong>, InnerBehavior>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
+        Pong response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -213,18 +204,18 @@ public class PipelineTests
     [Fact]
     public async Task Should_wrap_void_with_behavior()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
-        services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, OuterVoidBehavior>();
-        services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, InnerVoidBehavior>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
+        _ = services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, OuterVoidBehavior>();
+        _ = services.AddSingleton<IPipelineBehavior<VoidPing, Unit>, InnerVoidBehavior>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Send(new VoidPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
@@ -241,22 +232,22 @@ public class PipelineTests
     [Fact]
     public async Task Should_wrap_generics_with_behavior()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
 
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
 
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
+        Pong response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -273,21 +264,21 @@ public class PipelineTests
     [Fact]
     public async Task Should_wrap_void_generics_with_behavior()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestHandler<VoidPing>, VoidPingHandler>();
 
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
 
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Send(new VoidPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
@@ -304,28 +295,28 @@ public class PipelineTests
     [Fact]
     public async Task Should_handle_constrained_generics()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
 
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(ConstrainedBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(ConstrainedBehavior<,>));
 
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // force resolution like original test did
-        provider.GetServices<IPipelineBehavior<Ping, Pong>>();
+        _ = provider.GetServices<IPipelineBehavior<Ping, Pong>>();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
+        Pong response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -342,7 +333,7 @@ public class PipelineTests
 
         output.Messages.Clear();
 
-        var zingResponse = await mediator.Send(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken);
+        Zong zingResponse = await mediator.Send(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken);
 
         zingResponse.Message.ShouldBe("Zing Zong");
 
@@ -359,28 +350,28 @@ public class PipelineTests
     [Fact]
     public async Task Should_handle_concrete_and_open_generics()
     {
-        var output = new Logger();
+        Logger output = new();
 
-        var services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
+        ServiceCollection services = new();
+        _ = services.AddSingleton(output);
+        _ = services.AddSingleton<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestHandler<Zing, Zong>, ZingHandler>();
 
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
-        services.AddSingleton<IPipelineBehavior<Ping, Pong>, ConcreteBehavior>();
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(OuterBehavior<,>));
+        _ = services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(InnerBehavior<,>));
+        _ = services.AddSingleton<IPipelineBehavior<Ping, Pong>, ConcreteBehavior>();
 
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         // force resolution like original test did
-        provider.GetServices<IPipelineBehavior<Ping, Pong>>();
+        _ = provider.GetServices<IPipelineBehavior<Ping, Pong>>();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
+        Pong response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong");
 
@@ -397,7 +388,7 @@ public class PipelineTests
 
         output.Messages.Clear();
 
-        var zingResponse = await mediator.Send(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken);
+        Zong zingResponse = await mediator.Send(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken);
 
         zingResponse.Message.ShouldBe("Zing Zong");
 

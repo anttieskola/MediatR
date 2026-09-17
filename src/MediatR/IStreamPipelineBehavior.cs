@@ -1,8 +1,7 @@
-﻿
-namespace MediatR;
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
+
+namespace MediatR;
 
 /// <summary>
 /// Represents an async enumerable continuation for the next task to execute in the pipeline

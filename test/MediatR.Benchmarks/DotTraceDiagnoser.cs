@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
@@ -11,15 +7,20 @@ using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Validators;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 
 namespace MediatR.Benchmarks
 {
+    [AttributeUsage(AttributeTargets.Class)]
     internal sealed class DotTraceDiagnoserAttribute : Attribute, IConfigSource
     {
         public DotTraceDiagnoserAttribute()
         {
-            var manualConfig = ManualConfig.CreateEmpty();
-            manualConfig.AddDiagnoser(new DotTraceDiagnoser());
+            ManualConfig manualConfig = ManualConfig.CreateEmpty();
+            _ = manualConfig.AddDiagnoser(new DotTraceDiagnoser());
             Config = manualConfig;
         }
 
@@ -55,7 +56,7 @@ namespace MediatR.Benchmarks
                 }
 
                 // The directory must exist or an error is thrown by dotTrace.
-                Directory.CreateDirectory(_saveLocation);
+                _ = Directory.CreateDirectory(_saveLocation);
                 RunDotTrace(parameters);
             }
             catch (Exception e)
@@ -67,13 +68,13 @@ namespace MediatR.Benchmarks
 
         private void RunDotTrace(DiagnoserActionParameters parameters)
         {
-            var dotTrace = new Process
+            Process dotTrace = new()
             {
                 StartInfo = PrepareProcessStartInfo(parameters)
             };
             dotTrace.ErrorDataReceived += (sender, eventArgs) => Console.Error.WriteLine(eventArgs.Data);
             dotTrace.OutputDataReceived += (sender, eventArgs) => Console.WriteLine(eventArgs.Data);
-            dotTrace.Start();
+            _ = dotTrace.Start();
             dotTrace.BeginErrorReadLine();
             dotTrace.BeginOutputReadLine();
             dotTrace.Exited += (sender, args) => dotTrace.Dispose();
@@ -111,7 +112,7 @@ namespace MediatR.Benchmarks
         {
             try
             {
-                var startInfo = new ProcessStartInfo("dottrace")
+                ProcessStartInfo startInfo = new("dottrace")
                 {
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
@@ -119,8 +120,8 @@ namespace MediatR.Benchmarks
                     CreateNoWindow = true,
                 };
 
-                using var process = new Process { StartInfo = startInfo };
-                process.Start();
+                using Process process = new() { StartInfo = startInfo };
+                _ = process.Start();
                 process.WaitForExit();
 
                 return true;

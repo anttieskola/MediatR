@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR.Pipeline;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MediatR.Pipeline;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -15,78 +15,62 @@ public class TypeResolutionTests
     public TypeResolutionTests()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(Ping)));
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Ping>());
         _provider = services.BuildServiceProvider();
     }
 
     [Fact]
     public void ShouldResolveMediator()
-    {
-        _provider.GetService<IMediator>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IMediator>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveSender()
-    {
-        _provider.GetService<ISender>().ShouldNotBeNull();
-    }
+        => _provider.GetService<ISender>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolvePublisher()
-    {
-        _provider.GetService<IPublisher>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IPublisher>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveVoidRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<Ding>>().ShouldNotBeNull();
-    }
+        => _provider.GetService<IRequestHandler<Ding>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveNotificationHandlers()
-    {
-        _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
-    }
+        => _provider.GetServices<INotificationHandler<Pinged>>().Count().ShouldBe(4);
 
     [Fact]
     public void ShouldNotThrowWithMissingEnumerables()
-    {
-        Should.NotThrow(() => _provider.GetRequiredService<IEnumerable<IRequestExceptionAction<int, Exception>>>());
-    }
+        => Should.NotThrow(() => _provider.GetRequiredService<IEnumerable<IRequestExceptionAction<int, Exception>>>());
 
     [Fact]
     public void ShouldResolveFirstDuplicateHandler()
     {
-        _provider.GetService<IRequestHandler<DuplicateTest, string>>().ShouldNotBeNull();
-        _provider.GetService<IRequestHandler<DuplicateTest, string>>()
+        _ = _provider.GetService<IRequestHandler<DuplicateTest, string>>().ShouldNotBeNull();
+        _ = _provider.GetService<IRequestHandler<DuplicateTest, string>>()
             .ShouldBeAssignableTo<DuplicateHandler1>();
     }
 
     [Fact]
     public void ShouldResolveIgnoreSecondDuplicateHandler()
-    {
-        _provider.GetServices<IRequestHandler<DuplicateTest, string>>().Count().ShouldBe(1);
-    }
+        => _provider.GetServices<IRequestHandler<DuplicateTest, string>>().Count().ShouldBe(1);
 
     [Fact]
     public void ShouldHandleKeyedServices()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddKeyedSingleton<string>("Foo", "Foo");
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(Ping)));
-        var serviceProvider = services.BuildServiceProvider();
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddKeyedSingleton<string>("Foo", "Foo");
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Ping>());
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var mediator = serviceProvider.GetRequiredService<IMediator>();
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
 
-        mediator.ShouldNotBeNull();
+        _ = mediator.ShouldNotBeNull();
     }
 }

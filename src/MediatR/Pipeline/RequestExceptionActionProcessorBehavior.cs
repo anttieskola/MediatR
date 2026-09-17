@@ -1,6 +1,4 @@
-namespace MediatR.Pipeline;
-
-using Internal;
+using MediatR.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -10,18 +8,17 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace MediatR.Pipeline;
 /// <summary>
 /// Behavior for executing all <see cref="IRequestExceptionAction{TRequest,TException}"/> instances
 ///     after an exception is thrown by the following pipeline steps
 /// </summary>
 /// <typeparam name="TRequest">Request type</typeparam>
 /// <typeparam name="TResponse">Response type</typeparam>
-public class RequestExceptionActionProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class RequestExceptionActionProcessorBehavior<TRequest, TResponse>(IServiceProvider serviceProvider) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public RequestExceptionActionProcessorBehavior(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
@@ -31,20 +28,20 @@ public class RequestExceptionActionProcessorBehavior<TRequest, TResponse> : IPip
         }
         catch (Exception exception)
         {
-            var exceptionTypes = GetExceptionTypes(exception.GetType());
+            IEnumerable<Type> exceptionTypes = GetExceptionTypes(exception.GetType());
 
-            var actionsForException = exceptionTypes
+            List<(MethodInfo MethodInfo, object Action)> actionsForException = exceptionTypes
                 .SelectMany(exceptionType => GetActionsForException(exceptionType, request))
                 .GroupBy(static actionForException => actionForException.Action.GetType())
                 .Select(static actionForException => actionForException.First())
                 .Select(static actionForException => (MethodInfo: GetMethodInfoForAction(actionForException.ExceptionType), actionForException.Action))
                 .ToList();
 
-            foreach (var actionForException in actionsForException)
+            foreach ((MethodInfo MethodInfo, object Action) actionForException in actionsForException)
             {
                 try
                 {
-                    await ((Task)(actionForException.MethodInfo.Invoke(actionForException.Action, new object[] { request, exception, cancellationToken })
+                    await ((Task) (actionForException.MethodInfo.Invoke(actionForException.Action, [request, exception, cancellationToken])
                                   ?? throw new InvalidOperationException($"Could not create task for action method {actionForException.MethodInfo}."))).ConfigureAwait(false);
                 }
                 catch (TargetInvocationException invocationException) when (invocationException.InnerException != null)
@@ -69,19 +66,19 @@ public class RequestExceptionActionProcessorBehavior<TRequest, TResponse> : IPip
 
     private IEnumerable<(Type ExceptionType, object Action)> GetActionsForException(Type exceptionType, TRequest request)
     {
-        var exceptionActionInterfaceType = typeof(IRequestExceptionAction<,>).MakeGenericType(typeof(TRequest), exceptionType);
-        var enumerableExceptionActionInterfaceType = typeof(IEnumerable<>).MakeGenericType(exceptionActionInterfaceType);
+        Type exceptionActionInterfaceType = typeof(IRequestExceptionAction<,>).MakeGenericType(typeof(TRequest), exceptionType);
+        Type enumerableExceptionActionInterfaceType = typeof(IEnumerable<>).MakeGenericType(exceptionActionInterfaceType);
 
-        var actionsForException = (IEnumerable<object>)_serviceProvider.GetRequiredService(enumerableExceptionActionInterfaceType);
+        IEnumerable<object> actionsForException = (IEnumerable<object>) _serviceProvider.GetRequiredService(enumerableExceptionActionInterfaceType);
 
         return HandlersOrderer.Prioritize([.. actionsForException], request).Select(action => (exceptionType, action));
     }
 
     private static MethodInfo GetMethodInfoForAction(Type exceptionType)
     {
-        var exceptionActionInterfaceType = typeof(IRequestExceptionAction<,>).MakeGenericType(typeof(TRequest), exceptionType);
+        Type exceptionActionInterfaceType = typeof(IRequestExceptionAction<,>).MakeGenericType(typeof(TRequest), exceptionType);
 
-        var actionMethodInfo =
+        MethodInfo actionMethodInfo =
             exceptionActionInterfaceType.GetMethod(nameof(IRequestExceptionAction<,>.Execute))
             ?? throw new InvalidOperationException(
                 $"Could not find method {nameof(IRequestExceptionAction<,>.Execute)} on type {exceptionActionInterfaceType}");

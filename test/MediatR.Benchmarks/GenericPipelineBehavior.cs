@@ -9,12 +9,12 @@ namespace MediatR.Benchmarks
         where TRequest : notnull
     {
         public async Task<TResponse> Handle(
-            TRequest request, 
+            TRequest request,
             RequestHandlerDelegate<TResponse> next,
             CancellationToken cancellationToken)
         {
             await writer.WriteLineAsync("-- Handling Request");
-            var response = await next(cancellationToken);
+            TResponse response = await next(cancellationToken);
             await writer.WriteLineAsync("-- Finished Request");
             return response;
         }

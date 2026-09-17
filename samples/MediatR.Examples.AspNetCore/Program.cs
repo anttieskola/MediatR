@@ -1,9 +1,9 @@
+using MediatR.Examples.Streams;
+using MediatR.Pipeline;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using MediatR.Pipeline;
-using Microsoft.Extensions.DependencyInjection;
-
 
 namespace MediatR.Examples.AspNetCore;
 
@@ -11,30 +11,30 @@ public static class Program
 {
     public static Task Main(string[] args)
     {
-        var writer = new WrappingWriter(Console.Out);
-        var mediator = BuildMediator(writer);
+        WrappingWriter writer = new(Console.Out);
+        IMediator mediator = BuildMediator(writer);
         return Runner.Run(mediator, writer, "ASP.NET Core DI", testStreams: true);
     }
 
     private static IMediator BuildMediator(WrappingWriter writer)
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddSingleton<TextWriter>(writer);
+        _ = services.AddSingleton<TextWriter>(writer);
 
-        services.AddMediatR(cfg =>
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblies(typeof(Ping).Assembly, typeof(Sing).Assembly);
+            _ = cfg.RegisterServicesFromAssemblies(typeof(Ping).Assembly, typeof(Sing).Assembly);
         });
 
-        services.AddScoped(typeof(IStreamRequestHandler<Sing, Song>), typeof(SingHandler));
+        _ = services.AddScoped<IStreamRequestHandler<Sing, Song>, SingHandler>();
 
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(GenericPipelineBehavior<,>));
-        services.AddScoped(typeof(IRequestPreProcessor<>), typeof(GenericRequestPreProcessor<>));
-        services.AddScoped(typeof(IRequestPostProcessor<,>), typeof(GenericRequestPostProcessor<,>));
-        services.AddScoped(typeof(IStreamPipelineBehavior<,>), typeof(GenericStreamPipelineBehavior<,>));
+        _ = services.AddScoped(typeof(IPipelineBehavior<,>), typeof(GenericPipelineBehavior<,>));
+        _ = services.AddScoped(typeof(IRequestPreProcessor<>), typeof(GenericRequestPreProcessor<>));
+        _ = services.AddScoped(typeof(IRequestPostProcessor<,>), typeof(GenericRequestPostProcessor<,>));
+        _ = services.AddScoped(typeof(IStreamPipelineBehavior<,>), typeof(GenericStreamPipelineBehavior<,>));
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
         return provider.GetRequiredService<IMediator>();
     }

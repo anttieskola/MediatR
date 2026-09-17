@@ -1,7 +1,7 @@
+using Shouldly;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -22,8 +22,8 @@ public class NotificationHandlerTests
     [Fact]
     public async Task Should_call_abstract_handle_method()
     {
-        var builder = new StringBuilder();
-        var writer = new StringWriter(builder);
+        StringBuilder builder = new();
+        StringWriter writer = new(builder);
 
         INotificationHandler<Ping> handler = new PongChildHandler(writer);
 

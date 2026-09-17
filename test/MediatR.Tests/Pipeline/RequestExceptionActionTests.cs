@@ -1,9 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests.Pipeline;
@@ -85,25 +85,25 @@ public class RequestExceptionActionTests
     [Fact]
     public async Task Should_run_all_exception_actions_that_match_base_type()
     {
-        var pingExceptionAction = new PingExceptionAction();
-        var pongExceptionAction = new PongExceptionAction();
-        var pingPongExceptionAction = new PingPongExceptionAction<Ping>();
+        PingExceptionAction pingExceptionAction = new();
+        PongExceptionAction pongExceptionAction = new();
+        PingPongExceptionAction<Ping> pingPongExceptionAction = new();
 
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
         // Register MediatR core services and (optionally) assembly scanning
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly));
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly));
 
         // Register handler and the exception action instances
-        services.AddSingleton<IRequestExceptionAction<Ping, PingException>>(pingExceptionAction);
-        services.AddSingleton<IRequestExceptionAction<Ping, PongException>>(pongExceptionAction);
-        services.AddSingleton<IRequestExceptionAction<Ping, PingPongException>>(pingPongExceptionAction);
+        _ = services.AddSingleton<IRequestExceptionAction<Ping, PingException>>(pingExceptionAction);
+        _ = services.AddSingleton<IRequestExceptionAction<Ping, PongException>>(pongExceptionAction);
+        _ = services.AddSingleton<IRequestExceptionAction<Ping, PingPongException>>(pingPongExceptionAction);
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var request = new Ping { Message = "Ping!" };
-        await Assert.ThrowsAsync<PingException>(() => mediator.Send(request, TestContext.Current.CancellationToken));
+        Ping request = new() { Message = "Ping!" };
+        _ = await Assert.ThrowsAsync<PingException>(() => mediator.Send(request, TestContext.Current.CancellationToken));
 
         pingExceptionAction.Executed.ShouldBeTrue();
         pingPongExceptionAction.Executed.ShouldBeTrue();
@@ -113,26 +113,26 @@ public class RequestExceptionActionTests
     [Fact]
     public async Task Should_run_matching_exception_actions_only_once()
     {
-        var genericExceptionAction = new GenericExceptionAction<Ping>();
+        GenericExceptionAction<Ping> genericExceptionAction = new();
 
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestExceptionAction<Ping, Exception>>(genericExceptionAction);
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestExceptionAction<Ping, Exception>>(genericExceptionAction);
 
         // Ensure the RequestExceptionActionProcessorBehavior is registered in the DI container
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionActionProcessorBehavior<,>));
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionActionProcessorBehavior<,>));
 
-        services.AddMediatR(cfg =>
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
+            _ = cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
         });
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var request = new Ping { Message = "Ping!" };
-        await Assert.ThrowsAsync<PingException>(() => mediator.Send(request, TestContext.Current.CancellationToken));
+        Ping request = new() { Message = "Ping!" };
+        _ = await Assert.ThrowsAsync<PingException>(() => mediator.Send(request, TestContext.Current.CancellationToken));
 
         genericExceptionAction.ExecutionCount.ShouldBe(1);
     }

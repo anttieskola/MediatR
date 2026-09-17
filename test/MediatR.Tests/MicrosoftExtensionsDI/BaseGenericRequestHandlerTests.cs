@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +20,7 @@ public abstract class BaseGenericRequestHandlerTests
         CreateAssemblyModuleBuilder("ExceedsMaximumGenericTypeParametersAssembly", 1, 1, CreateHandlerForExceedsMaximumGenericTypeParametersTest);
 
     protected static Assembly GenerateTimeoutOccursAssembly() =>
-        CreateAssemblyModuleBuilder("TimeOutOccursAssembly", 400, 3, CreateHandlerForTimeoutOccursTest);
+        CreateAssemblyModuleBuilder("TimeOutOccursAssembly", 100, 3, CreateHandlerForTimeoutOccursTest);
 
     protected static Assembly GenerateOptOutAssembly() =>
         CreateAssemblyModuleBuilder("OptOutAssembly", 2, 2, CreateHandlerForOptOutTest);
@@ -50,7 +50,7 @@ public abstract class BaseGenericRequestHandlerTests
     {
         TypeBuilder typeBuilder = moduleBuilder.DefineType(className, TypeAttributes.Public);
         typeBuilder.AddInterfaceImplementation(interfaceType);
-        typeBuilder.CreateTypeInfo();
+        _ = typeBuilder.CreateTypeInfo();
     }
 
     protected static Type CreateInterface(ModuleBuilder moduleBuilder, string interfaceName)
@@ -61,7 +61,7 @@ public abstract class BaseGenericRequestHandlerTests
 
     protected static AssemblyBuilder CreateAssemblyModuleBuilder(string name, int classes, int interfaces, Action<ModuleBuilder> handlerCreation)
     {
-        AssemblyName assemblyName = new AssemblyName(name);
+        AssemblyName assemblyName = new(name);
         AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
         ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
 
@@ -73,7 +73,7 @@ public abstract class BaseGenericRequestHandlerTests
 
     protected static AssemblyBuilder GenerateCombinationsTestAssembly(int classes, int interfaces, int genericParameters)
     {
-        AssemblyName assemblyName = new AssemblyName("DynamicAssembly");
+        AssemblyName assemblyName = new("DynamicAssembly");
         AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
         ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
 
@@ -94,28 +94,28 @@ public abstract class BaseGenericRequestHandlerTests
         }
 
         // Define the dynamic request class
-        var handlerTypeBuilder = moduleBuilder!.DefineType($"{requestName}Handler", TypeAttributes.Public);
-        var requestTypeBuilder = moduleBuilder!.DefineType(requestName, TypeAttributes.Public);
+        TypeBuilder handlerTypeBuilder = moduleBuilder!.DefineType($"{requestName}Handler", TypeAttributes.Public);
+        TypeBuilder requestTypeBuilder = moduleBuilder!.DefineType(requestName, TypeAttributes.Public);
 
         // Define the generic parameters
         string[] genericParameterNames = GetGenericParameterNames(numberOfTypeParameters);
-        var handlerGenericParameters = handlerTypeBuilder.DefineGenericParameters(genericParameterNames);
-        var requestGenericParameters = requestTypeBuilder.DefineGenericParameters(genericParameterNames);
+        GenericTypeParameterBuilder[] handlerGenericParameters = handlerTypeBuilder.DefineGenericParameters(genericParameterNames);
+        GenericTypeParameterBuilder[] requestGenericParameters = requestTypeBuilder.DefineGenericParameters(genericParameterNames);
         requestTypeBuilder.AddInterfaceImplementation(typeof(IRequest));
 
         if (includeConstraints)
         {
             for (int i = 0; i < numberOfTypeParameters; i++)
             {
-                int interfaceIndex = i % numberOfInterfaces + 1;
+                int interfaceIndex = (i % numberOfInterfaces) + 1;
 
-                var constraintType = moduleBuilder.Assembly.GetType($"ITestInterface{interfaceIndex}");
+                Type? constraintType = moduleBuilder.Assembly.GetType($"ITestInterface{interfaceIndex}");
                 handlerGenericParameters[i].SetInterfaceConstraints(constraintType!);
                 requestGenericParameters[i].SetInterfaceConstraints(constraintType!);
             }
         }
 
-        var requestType = requestTypeBuilder.CreateTypeInfo().AsType();
+        Type requestType = requestTypeBuilder.CreateTypeInfo().AsType();
         handlerTypeBuilder.AddInterfaceImplementation(typeof(IRequestHandler<>).MakeGenericType(requestType));
 
         // Define the Handle method
@@ -133,7 +133,7 @@ public abstract class BaseGenericRequestHandlerTests
         handlerTypeBuilder.DefineMethodOverride(handleMethodBuilder, typeof(IRequestHandler<>).MakeGenericType(requestType).GetMethod("Handle")!);
 
         // Create the dynamic request class
-        handlerTypeBuilder.CreateTypeInfo();
+        _ = handlerTypeBuilder.CreateTypeInfo();
     }
 
     protected static void CreateTestClassesAndInterfaces(ModuleBuilder moduleBuilder, int numberOfClasses, int numberOfInterfaces)
@@ -156,7 +156,7 @@ public abstract class BaseGenericRequestHandlerTests
 
     protected List<Type[]> GenerateCombinations(Type[] types, int interfaces)
     {
-        var groups = new List<Type>[interfaces];
+        List<Type>[] groups = new List<Type>[interfaces];
         for (int i = 0; i < interfaces; i++)
         {
             groups[i] = types.Where((t, index) => index % interfaces == i).ToList();
@@ -167,7 +167,7 @@ public abstract class BaseGenericRequestHandlerTests
 
     protected static List<Type[]> GenerateCombinationsRecursive(List<Type>[] groups, int currentGroup)
     {
-        var result = new List<Type[]>();
+        List<Type[]> result = new();
 
         if (currentGroup == groups.Length)
         {
@@ -175,9 +175,9 @@ public abstract class BaseGenericRequestHandlerTests
             return result;
         }
 
-        foreach (var type in groups[currentGroup])
+        foreach (Type type in groups[currentGroup])
         {
-            foreach (var subCombination in GenerateCombinationsRecursive(groups, currentGroup + 1))
+            foreach (Type[] subCombination in GenerateCombinationsRecursive(groups, currentGroup + 1))
             {
                 result.Add([type, .. subCombination]);
             }
@@ -192,7 +192,7 @@ public abstract class BaseGenericRequestHandlerTests
             .Select(i => $"TestClass{i}")
             .ToArray();
 
-        var groups = new List<string>[numberOfInterfaces];
+        List<string>[] groups = new List<string>[numberOfInterfaces];
         for (int i = 0; i < numberOfInterfaces; i++)
         {
             groups[i] = [.. testClasses.Where((t, index) => index % numberOfInterfaces == i)];

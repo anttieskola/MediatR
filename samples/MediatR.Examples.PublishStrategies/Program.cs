@@ -1,29 +1,29 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MediatR.Examples.PublishStrategies;
 
-class Program
+internal static class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddSingleton<Publisher>();
+        _ = services.AddSingleton<Publisher>();
 
-        services.AddTransient<INotificationHandler<Pinged>>(sp => new SyncPingedHandler("1"));
-        services.AddTransient<INotificationHandler<Pinged>>(sp => new AsyncPingedHandler("2"));
-        services.AddTransient<INotificationHandler<Pinged>>(sp => new AsyncPingedHandler("3"));
-        services.AddTransient<INotificationHandler<Pinged>>(sp => new SyncPingedHandler("4"));
+        _ = services.AddTransient<INotificationHandler<Pinged>>(sp => new SyncPingedHandler("1"));
+        _ = services.AddTransient<INotificationHandler<Pinged>>(sp => new AsyncPingedHandler("2"));
+        _ = services.AddTransient<INotificationHandler<Pinged>>(sp => new AsyncPingedHandler("3"));
+        _ = services.AddTransient<INotificationHandler<Pinged>>(sp => new SyncPingedHandler("4"));
 
         var provider = services.BuildServiceProvider();
 
         var publisher = provider.GetRequiredService<Publisher>();
 
-        var pinged = new Pinged();
+        Pinged pinged = new();
 
-        foreach (PublishStrategy strategy in Enum.GetValues(typeof(PublishStrategy)))
+        foreach (PublishStrategy strategy in Enum.GetValues<PublishStrategy>())
         {
             Console.WriteLine($"Strategy: {strategy}");
             Console.WriteLine("----------");

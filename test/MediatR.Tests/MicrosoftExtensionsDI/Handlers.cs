@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,7 +41,8 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
 
     }
 
-    class InternalPing : IRequest { }
+    internal class InternalPing : IRequest
+    { }
 
     public class StreamPing : IStreamRequest<Pong>
     {
@@ -135,14 +136,14 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
             => Task.FromResult(nameof(DuplicateHandler2));
     }
 
-    class InternalPingHandler : IRequestHandler<InternalPing>
+    internal class InternalPingHandler : IRequestHandler<InternalPing>
     {
         public Task Handle(InternalPing request, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    class MyCustomMediator : IMediator
+    internal class MyCustomMediator : IMediator
     {
-        public Task<object?> Send(object request, CancellationToken cancellationToken = new()) 
+        public Task<object?> Send(object request, CancellationToken cancellationToken = new())
             => throw new System.NotImplementedException();
 
         public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request,
@@ -165,20 +166,22 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
             => throw new System.NotImplementedException();
     }
 
-    interface ITypeArgument { }
-    class ConcreteTypeArgument : ITypeArgument { }
-    class OpenGenericVoidRequest<T> : IRequest
+    internal interface ITypeArgument
+    { }
+    internal class ConcreteTypeArgument : ITypeArgument
+    { }
+    internal class OpenGenericVoidRequest<T> : IRequest
         where T : class, ITypeArgument
     { }
-    class OpenGenericVoidRequestHandler<T> : IRequestHandler<OpenGenericVoidRequest<T>>
+    internal class OpenGenericVoidRequestHandler<T> : IRequestHandler<OpenGenericVoidRequest<T>>
         where T : class, ITypeArgument
     {
         public Task Handle(OpenGenericVoidRequest<T> request, CancellationToken cancellationToken) => Task.CompletedTask;
     }
-    class OpenGenericReturnTypeRequest<T> : IRequest<string>
+    internal class OpenGenericReturnTypeRequest<T> : IRequest<string>
         where T : class, ITypeArgument
     { }
-    class OpenGenericReturnTypeRequestHandler<T> : IRequestHandler<OpenGenericReturnTypeRequest<T>, string>
+    internal class OpenGenericReturnTypeRequestHandler<T> : IRequestHandler<OpenGenericReturnTypeRequest<T>, string>
         where T : class, ITypeArgument
     {
         public Task<string> Handle(OpenGenericReturnTypeRequest<T> request, CancellationToken cancellationToken) => Task.FromResult(nameof(request));
@@ -209,9 +212,6 @@ namespace MediatR.Tests.MicrosoftExtensionsDI
 
 namespace MediatR.Tests.MicrosoftExtensionsDI.Included
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-
     public class Foo : IRequest<Bar>
     {
         public string? Message { get; init; }

@@ -230,3 +230,6 @@ coverage.xml
 # Test results
 **/TestResults/*
 
+# Sonarlint configuration
+.sonarlint
+

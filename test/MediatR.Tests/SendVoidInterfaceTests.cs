@@ -1,9 +1,9 @@
-using System.Threading;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -24,14 +24,14 @@ public class SendVoidInterfaceTests
     [Fact]
     public async Task Should_resolve_main_void_handler()
     {
-        var builder = new StringBuilder();
-        var writer = new StringWriter(builder);
+        StringBuilder builder = new();
+        StringWriter writer = new(builder);
 
-        var services = new ServiceCollection();
-        services.AddSingleton<TextWriter>(writer);
-        services.AddSingleton<IRequestHandler<Ping>, PingHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<TextWriter>(writer);
+        _ = services.AddSingleton<IRequestHandler<Ping>, PingHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
 
