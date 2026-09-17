@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Linq;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -13,11 +13,11 @@ public class CustomMediatorTests
     public CustomMediatorTests()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
             cfg.MediatorImplementationType = typeof(MyCustomMediator);
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
         });
         _provider = services.BuildServiceProvider();
     }
@@ -25,7 +25,7 @@ public class CustomMediatorTests
     [Fact]
     public void ShouldResolveMediator()
     {
-        _provider.GetService<IMediator>().ShouldNotBeNull();
+        _ = _provider.GetService<IMediator>().ShouldNotBeNull();
         _provider.GetRequiredService<IMediator>().GetType().ShouldBe(typeof(MyCustomMediator));
     }
 
@@ -41,18 +41,18 @@ public class CustomMediatorTests
     public void Can_Call_AddMediatr_multiple_times()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
             cfg.MediatorImplementationType = typeof(MyCustomMediator);
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
         });
 
         // Call AddMediatr again, this should NOT override our custom mediatr (With MS DI, last registration wins)
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests)));
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests)));
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
         mediator.GetType().ShouldBe(typeof(MyCustomMediator));
     }
 }

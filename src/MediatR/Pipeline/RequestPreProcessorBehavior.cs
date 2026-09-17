@@ -1,9 +1,8 @@
-namespace MediatR.Pipeline;
-
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace MediatR.Pipeline;
 /// <summary>
 /// Behavior for executing all <see cref="IRequestPreProcessor{TRequest}"/> instances before handling a request
 /// </summary>
@@ -14,7 +13,7 @@ public class RequestPreProcessorBehavior<TRequest, TResponse>(IEnumerable<IReque
 {
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        foreach (var processor in preProcessors)
+        foreach (IRequestPreProcessor<TRequest> processor in preProcessors)
         {
             await processor.Process(request, cancellationToken).ConfigureAwait(false);
         }

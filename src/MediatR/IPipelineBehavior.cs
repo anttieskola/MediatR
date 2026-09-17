@@ -1,9 +1,7 @@
-
-namespace MediatR;
-
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace MediatR;
 /// <summary>
 /// Represents an async continuation for the next task to execute in the pipeline
 /// </summary>

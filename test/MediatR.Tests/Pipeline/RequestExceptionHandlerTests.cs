@@ -1,9 +1,9 @@
 using MediatR.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.Pipeline;
@@ -80,18 +80,18 @@ public class RequestExceptionHandlerTests
     [Fact]
     public async Task Should_run_exception_handler_and_allow_for_exception_not_to_throw()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
         // Register handler and exception handlers
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongExceptionHandler>();
-        services.AddTransient<IRequestExceptionHandler<Ping, Pong, PingException>, PingPongExceptionHandlerForType>();
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongExceptionHandler>();
+        _ = services.AddTransient<IRequestExceptionHandler<Ping, Pong, PingException>, PingPongExceptionHandlerForType>();
 
         // Register the request-exception processor behavior (open generic)
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
 
         // Register mediator
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient<IMediator, Mediator>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
@@ -104,21 +104,21 @@ public class RequestExceptionHandlerTests
     [Fact]
     public async Task Should_run_exception_handler_and_allow_for_exception_to_be_still_thrown()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongExceptionHandlerNotHandled>();
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongExceptionHandlerNotHandled>();
 
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
+        _ = services.AddTransient<IMediator, Mediator>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var request = new Ping { Message = "Ping" };
-        await Should.ThrowAsync<PingException>(async () =>
+        Ping request = new() { Message = "Ping" };
+        _ = await Should.ThrowAsync<PingException>(async () =>
         {
-            await mediator.Send(request);
+            _ = await mediator.Send(request);
         });
 
         request.Message.ShouldBe("Ping Thrown Not Handled");
@@ -127,44 +127,44 @@ public class RequestExceptionHandlerTests
     [Fact]
     public async Task Should_run_exception_handler_and_unwrap_expections_thrown_in_the_handler()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongThrowingExceptionHandler>();
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddTransient<IRequestExceptionHandler<Ping, Pong, Exception>, PingPongThrowingExceptionHandler>();
 
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
+        _ = services.AddTransient<IMediator, Mediator>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var request = new Ping { Message = "Ping" };
-        await Should.ThrowAsync<ApplicationException>(async () =>
+        Ping request = new() { Message = "Ping" };
+        _ = await Should.ThrowAsync<ApplicationException>(async () =>
         {
-            await mediator.Send(request);
+            _ = await mediator.Send(request);
         });
     }
 
     [Fact]
     public async Task Should_run_matching_exception_handlers_only_once()
     {
-        var genericPingExceptionHandler = new GenericPingExceptionHandler();
+        GenericPingExceptionHandler genericPingExceptionHandler = new();
 
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddSingleton<IRequestExceptionHandler<Ping, Pong, Exception>>(genericPingExceptionHandler);
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddSingleton<IRequestExceptionHandler<Ping, Pong, Exception>>(genericPingExceptionHandler);
 
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
+        _ = services.AddTransient<IMediator, Mediator>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        var request = new Ping { Message = "Ping" };
-        await Should.ThrowAsync<PingException>(async () =>
+        Ping request = new() { Message = "Ping" };
+        _ = await Should.ThrowAsync<PingException>(async () =>
         {
-            await mediator.Send(request);
+            _ = await mediator.Send(request);
         });
 
         genericPingExceptionHandler.ExecutionCount.ShouldBe(1);

@@ -1,7 +1,7 @@
-﻿using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -14,7 +14,7 @@ public class PipelineMultiCallToConstructorTests
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
             output.Messages.Add("ConstructorTestBehavior before");
-            var response = await next();
+            TResponse? response = await next(cancellationToken);
             output.Messages.Add("ConstructorTestBehavior after");
 
             return response;
@@ -34,17 +34,16 @@ public class PipelineMultiCallToConstructorTests
     public class ConstructorTestHandler : IRequestHandler<ConstructorTestRequest, ConstructorTestResponse>
     {
 
-        private static volatile object _lockObject = new();
+        private static readonly object _lockObject = new();
         private readonly Logger _logger;
-        private static int _constructorCallCount;
 
-        public static int ConstructorCallCount => _constructorCallCount;
+        public static int ConstructorCallCount { get; private set; }
 
         public static void ResetCallCount()
         {
             lock (_lockObject)
             {
-                _constructorCallCount = 0;
+                ConstructorCallCount = 0;
             }
         }
 
@@ -53,7 +52,7 @@ public class PipelineMultiCallToConstructorTests
             _logger = logger;
             lock (_lockObject)
             {
-                _constructorCallCount++;
+                ConstructorCallCount++;
             }
         }
 
@@ -70,21 +69,21 @@ public class PipelineMultiCallToConstructorTests
         ConstructorTestHandler.ResetCallCount();
         ConstructorTestHandler.ConstructorCallCount.ShouldBe(0);
 
-        var output = new Logger();
+        Logger output = new();
         IServiceCollection services = new ServiceCollection();
 
-        services.AddSingleton(output);
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ConstructorTestBehavior<,>));
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ConstructorTestBehavior<,>));
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
-            cfg.AddOpenBehavior(typeof(ConstructorTestBehavior<,>));
+            _ = cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
+            _ = cfg.AddOpenBehavior(typeof(ConstructorTestBehavior<,>));
         });
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new ConstructorTestRequest { Message = "ConstructorPing" }, TestContext.Current.CancellationToken);
+        ConstructorTestResponse response = await mediator.Send(new ConstructorTestRequest { Message = "ConstructorPing" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("ConstructorPing ConstructorPong");
 

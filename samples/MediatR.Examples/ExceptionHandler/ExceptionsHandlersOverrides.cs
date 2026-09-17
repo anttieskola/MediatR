@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace MediatR.Examples.ExceptionHandler.Overrides;
 
-public class CommonExceptionHandler : IRequestExceptionHandler<PingResourceTimeout, Pong, Exception>
+public class CommonExceptionHandler(TextWriter writer) : IRequestExceptionHandler<PingResourceTimeout, Pong, Exception>
 {
-    private readonly TextWriter _writer;
-
-    public CommonExceptionHandler(TextWriter writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public async Task Handle(PingResourceTimeout request,
         Exception exception,
@@ -25,11 +23,9 @@ public class CommonExceptionHandler : IRequestExceptionHandler<PingResourceTimeo
     }
 }
 
-public class ServerExceptionHandler : ExceptionHandler.ServerExceptionHandler
+public class ServerExceptionHandler(TextWriter writer) : ExceptionHandler.ServerExceptionHandler(writer)
 {
-    private readonly TextWriter _writer;
-
-    public ServerExceptionHandler(TextWriter writer) : base(writer) => _writer = writer;
+    private readonly TextWriter _writer = writer;
 
     public override async Task Handle(PingNewResource request,
         ServerException exception,

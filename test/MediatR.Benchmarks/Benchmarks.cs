@@ -1,7 +1,7 @@
-using System.IO;
-using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace MediatR.Benchmarks
 {
@@ -15,17 +15,17 @@ namespace MediatR.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            var services = new ServiceCollection();
+            ServiceCollection services = new();
 
-            services.AddSingleton(TextWriter.Null);
+            _ = services.AddSingleton(TextWriter.Null);
 
-            services.AddMediatR(cfg =>
+            _ = services.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssemblyContaining(typeof(Ping));
-                cfg.AddOpenBehavior(typeof(GenericPipelineBehavior<,>));
+                _ = cfg.RegisterServicesFromAssemblyContaining<Ping>();
+                _ = cfg.AddOpenBehavior(typeof(GenericPipelineBehavior<,>));
             });
 
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
 
             _mediator = provider.GetRequiredService<IMediator>();
         }

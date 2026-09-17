@@ -21,7 +21,7 @@ internal class ObjectDetails : IComparer<ObjectDetails>
     {
         Value = value;
         Type = Value.GetType();
-        var exceptionHandlerType = value.GetType();
+        Type exceptionHandlerType = value.GetType();
 
         Name = exceptionHandlerType.Name;
         AssemblyName = exceptionHandlerType.Assembly.GetName().Name;
@@ -35,12 +35,7 @@ internal class ObjectDetails : IComparer<ObjectDetails>
             return 1;
         }
 
-        if (y == null)
-        {
-            return -1;
-        }
-
-        return CompareByAssembly(x, y) ?? CompareByNamespace(x, y) ?? CompareByLocation(x, y);
+        return y == null ? -1 : CompareByAssembly(x, y) ?? CompareByNamespace(x, y) ?? CompareByLocation(x, y);
     }
 
     /// <summary>
@@ -64,12 +59,7 @@ internal class ObjectDetails : IComparer<ObjectDetails>
         {
             return 1;
         }
-        if (x.AssemblyName != AssemblyName && y.AssemblyName != AssemblyName)
-        {
-            return 0;
-        }
-
-        return null;
+        return x.AssemblyName != AssemblyName && y.AssemblyName != AssemblyName ? 0 : null;
     }
 
     /// <summary>
@@ -98,12 +88,9 @@ internal class ObjectDetails : IComparer<ObjectDetails>
         {
             return 1;
         }
-        if (x.Location.StartsWith(Location, StringComparison.Ordinal) && y.Location.StartsWith(Location, StringComparison.Ordinal))
-        {
-            return 0;
-        }
-
-        return null;
+        return x.Location.StartsWith(Location, StringComparison.Ordinal) && y.Location.StartsWith(Location, StringComparison.Ordinal)
+            ? 0
+            : null;
     }
 
     /// <summary>
@@ -136,10 +123,6 @@ internal class ObjectDetails : IComparer<ObjectDetails>
         {
             return -1;
         }
-        if (x.Location.Length < y.Location.Length)
-        {
-            return 1;
-        }
-        return 0;
+        return x.Location.Length < y.Location.Length ? 1 : 0;
     }
 }

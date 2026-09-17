@@ -1,18 +1,16 @@
-﻿using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using MediatR.NotificationPublishers;
+﻿using MediatR.NotificationPublishers;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests;
 
 public class NotificationPublisherTests
 {
-    public class Notification : INotification
-    {
-    }
+    public class Notification : INotification;
 
     public class FirstHandler : INotificationHandler<Notification>
     {
@@ -28,16 +26,16 @@ public class NotificationPublisherTests
     [Fact]
     public async Task Should_handle_sequentially_by_default()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg =>
+        ServiceCollection services = new();
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<Notification>();
+            _ = cfg.RegisterServicesFromAssemblyContaining<Notification>();
         });
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
-        var mediator = serviceProvider.GetRequiredService<IMediator>();
+        IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
 
-        var timer = new Stopwatch();
+        Stopwatch timer = new();
         timer.Start();
 
         await mediator.Publish(new Notification(), TestContext.Current.CancellationToken);
@@ -47,9 +45,9 @@ public class NotificationPublisherTests
         var sequentialElapsed = timer.ElapsedMilliseconds;
 
         services = new ServiceCollection();
-        services.AddMediatR(cfg =>
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<Notification>();
+            _ = cfg.RegisterServicesFromAssemblyContaining<Notification>();
             cfg.NotificationPublisherType = typeof(TaskWhenAllPublisher);
         });
         serviceProvider = services.BuildServiceProvider();

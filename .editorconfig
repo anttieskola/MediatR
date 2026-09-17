@@ -23,7 +23,7 @@ tab_width=2
 [*]
 
 # Standard propertiesW
-end_of_line= crlf
+end_of_line= lf
 insert_final_newline=false
 
 # Microsoft .NET properties
@@ -145,3 +145,6 @@ dotnet_style_prefer_conditional_expression_over_assignment = true:silent
 dotnet_style_prefer_conditional_expression_over_return = true:silent
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_prefer_inferred_tuple_names = true:suggestion
+
+# IDE0079: Remove unnecessary suppression (to be able to suppress things for sonarqube)
+dotnet_diagnostic.IDE0079.severity = none

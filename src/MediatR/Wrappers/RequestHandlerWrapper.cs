@@ -1,10 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MediatR.Wrappers;
+
+#pragma warning disable S1694 // Keep API original
 
 public abstract class RequestHandlerBase
 {
@@ -34,14 +36,17 @@ public class RequestHandlerWrapperImpl<TRequest, TResponse> : RequestHandlerWrap
     public override Task<TResponse> Handle(IRequest<TResponse> request, IServiceProvider serviceProvider,
         CancellationToken cancellationToken)
     {
-        Task<TResponse> Handler(CancellationToken t = default) => serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResponse>>()
+        Task<TResponse> Handler(CancellationToken t = default)
+        {
+            return serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResponse>>()
             .Handle((TRequest) request, t == default ? cancellationToken : t);
+        }
 
         return serviceProvider
             .GetServices<IPipelineBehavior<TRequest, TResponse>>()
             .Reverse()
             .Aggregate((RequestHandlerDelegate<TResponse>) Handler,
-                (next, pipeline) => (t) => pipeline.Handle((TRequest) request, next, t == default ? cancellationToken : t))();
+                (next, pipeline) => (t) => pipeline.Handle((TRequest) request, next, t == default ? cancellationToken : t))(cancellationToken);
     }
 }
 
@@ -67,6 +72,8 @@ public class RequestHandlerWrapperImpl<TRequest> : RequestHandlerWrapper
             .GetServices<IPipelineBehavior<TRequest, Unit>>()
             .Reverse()
             .Aggregate((RequestHandlerDelegate<Unit>) Handler,
-                (next, pipeline) => (t) => pipeline.Handle((TRequest) request, next, t == default ? cancellationToken : t))();
+                (next, pipeline) => (t) => pipeline.Handle((TRequest) request, next, t == default ? cancellationToken : t))(cancellationToken);
     }
 }
+
+#pragma warning restore S1694 // Keep API original

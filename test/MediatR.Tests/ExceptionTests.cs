@@ -1,8 +1,8 @@
-using System.Threading;
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -11,45 +11,25 @@ public class ExceptionTests
 {
     private readonly IMediator _mediator;
 
-    public class Ping : IRequest<Pong>
-    {
-    }
+    public class Ping : IRequest<Pong>;
 
-    public class Pong
-    {
-    }
+    public class Pong;
 
-    public class VoidPing : IRequest
-    {
-    }
+    public class VoidPing : IRequest;
 
-    public class Pinged : INotification
-    {
-    }
+    public class Pinged : INotification;
 
-    public class AsyncPing : IRequest<Pong>
-    {
-    }
+    public class AsyncPing : IRequest<Pong>;
 
-    public class AsyncVoidPing : IRequest
-    {
-    }
+    public class AsyncVoidPing : IRequest;
 
-    public class AsyncPinged : INotification
-    {
-    }
+    public class AsyncPinged : INotification;
 
-    public class NullPing : IRequest<Pong>
-    {
-    }
+    public class NullPing : IRequest<Pong>;
 
-    public class VoidNullPing : IRequest
-    {
-    }
+    public class VoidNullPing : IRequest;
 
-    public class NullPinged : INotification
-    {
-    }
+    public class NullPinged : INotification;
 
     public class NullPingHandler : IRequestHandler<NullPing, Pong>
     {
@@ -65,9 +45,9 @@ public class ExceptionTests
 
     public ExceptionTests()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         _mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
     }
@@ -121,73 +101,73 @@ public class ExceptionTests
     [Fact]
     public async Task Should_throw_argument_exception_for_send_when_request_is_null()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IRequestHandler<NullPing, Pong>, NullPingHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IRequestHandler<NullPing, Pong>, NullPingHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         NullPing request = null!;
 
-        await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Send(request));
+        _ = await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Send(request));
     }
 
     [Fact]
     public async Task Should_throw_argument_exception_for_void_send_when_request_is_null()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IRequestHandler<VoidNullPing>, VoidNullPingHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IRequestHandler<VoidNullPing>, VoidNullPingHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         VoidNullPing request = null!;
 
-        await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Send(request));
+        _ = await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Send(request));
     }
 
     [Fact]
     public async Task Should_throw_argument_exception_for_publish_when_request_is_null()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         NullPinged notification = null!;
 
-        await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Publish(notification));
+        _ = await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Publish(notification));
     }
 
     [Fact]
     public async Task Should_throw_argument_exception_for_publish_when_request_is_null_object()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         object notification = null!;
 
-        await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Publish(notification));
+        _ = await Should.ThrowAsync<ArgumentNullException>(async () => await mediator.Publish(notification));
     }
 
     [Fact]
     public async Task Should_throw_argument_exception_for_publish_when_request_is_not_notification()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         object notification = "totally not notification";
 
-        await Should.ThrowAsync<ArgumentException>(async () => await mediator.Publish(notification));
+        _ = await Should.ThrowAsync<ArgumentException>(async () => await mediator.Publish(notification));
     }
 
     public class PingException : IRequest
@@ -204,30 +184,30 @@ public class ExceptionTests
     [Fact]
     public async Task Should_throw_exception_for_non_generic_send_when_exception_occurs()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IRequestHandler<PingException>, PingExceptionHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IRequestHandler<PingException>, PingExceptionHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         object pingException = new PingException();
 
-        await Should.ThrowAsync<NotImplementedException>(async () => await mediator.Send(pingException));
+        _ = await Should.ThrowAsync<NotImplementedException>(async () => await mediator.Send(pingException));
     }
 
     [Fact]
     public async Task Should_throw_exception_for_non_request_send()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         object nonRequest = new NonRequest();
 
-        var argumentException = await Should.ThrowAsync<ArgumentException>(async () => await mediator.Send(nonRequest));
+        ArgumentException argumentException = await Should.ThrowAsync<ArgumentException>(async () => await mediator.Send(nonRequest));
         Assert.StartsWith("NonRequest does not implement IRequest", argumentException.Message);
     }
 
@@ -239,15 +219,15 @@ public class ExceptionTests
     [Fact]
     public async Task Should_throw_exception_for_generic_send_when_exception_occurs()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IRequestHandler<PingException>, PingExceptionHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IRequestHandler<PingException>, PingExceptionHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
-        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+        IMediator mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
         PingException pingException = new();
 
-        await Should.ThrowAsync<NotImplementedException>(async () => await mediator.Send(pingException));
+        _ = await Should.ThrowAsync<NotImplementedException>(async () => await mediator.Send(pingException));
     }
 }

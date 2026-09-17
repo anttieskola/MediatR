@@ -23,9 +23,7 @@ public class RequestPostProcessorTests
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
         public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new Pong { Message = request.Message + " Pong" });
-        }
+            => Task.FromResult(new Pong { Message = request.Message + " Pong" });
     }
 
     public class PingPongPostProcessor : IRequestPostProcessor<Ping, Pong>
@@ -41,24 +39,24 @@ public class RequestPostProcessorTests
     [Fact]
     public async Task Should_run_postprocessors()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
         // Register handler and post-processor
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddTransient<IRequestPostProcessor<Ping, Pong>, PingPongPostProcessor>();
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddTransient<IRequestPostProcessor<Ping, Pong>, PingPongPostProcessor>();
 
         // Register the pipeline behavior (post-processor behavior)
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
 
         // Register MediatR components required by Mediator
-        services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
+        _ = services.AddTransient<IMediator, Mediator>();
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
+        Pong response = await mediator.Send(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken);
 
         response.Message.ShouldBe("Ping Pong Ping");
     }

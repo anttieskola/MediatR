@@ -1,16 +1,13 @@
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace MediatR.Tests;
 
 public class ServiceFactoryTests
 {
-    public class Ping : IRequest<Pong>
-    {
-
-    }
+    public class Ping : IRequest<Pong>;
 
     public class Pong
     {
@@ -20,12 +17,12 @@ public class ServiceFactoryTests
     [Fact]
     public async Task Should_throw_given_no_handler()
     {
-        var serviceCollection = new ServiceCollection();
+        ServiceCollection serviceCollection = new();
         var serviceProvider = serviceCollection.BuildServiceProvider();
 
-        var mediator = new Mediator(serviceProvider);
+        Mediator mediator = new(serviceProvider);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        _ = await Assert.ThrowsAsync<InvalidOperationException>(
             () => mediator.Send(new Ping(), TestContext.Current.CancellationToken)
         );
     }

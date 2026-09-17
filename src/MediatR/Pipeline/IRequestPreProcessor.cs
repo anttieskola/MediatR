@@ -1,8 +1,7 @@
-namespace MediatR.Pipeline;
-
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace MediatR.Pipeline;
 /// <summary>
 /// Defined a request pre-processor for a handler
 /// </summary>

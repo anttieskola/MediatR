@@ -1,12 +1,12 @@
+using MediatR.Examples.ExceptionHandler;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MediatR.Examples;
-
-using MediatR.Examples.ExceptionHandler;
-using System.IO;
-using System.Threading.Tasks;
 
 public static class Runner
 {
@@ -18,7 +18,7 @@ public static class Runner
         await writer.WriteLineAsync();
 
         await writer.WriteLineAsync("Sending Ping...");
-        var pong = await mediator.Send(new Ping { Message = "Ping" });
+        Pong pong = await mediator.Send(new Ping { Message = "Ping" });
         await writer.WriteLineAsync("Received: " + pong.Message);
         await writer.WriteLineAsync();
 
@@ -26,93 +26,19 @@ public static class Runner
         await mediator.Publish(new Pinged());
         await writer.WriteLineAsync();
 
-        await writer.WriteLineAsync("Publishing Ponged...");
-        var failedPong = false;
-        try
-        {
-            await mediator.Publish(new Ponged());
-        }
-        catch (Exception e)
-        {
-            failedPong = true;
-            await writer.WriteLineAsync(e.ToString());
-        }
-        await writer.WriteLineAsync();
+        bool failedPong = await PublishPonged(mediator, writer);
+        bool failedJing = await SendJing(mediator, writer);
+        bool failedSing = testStreams && await TestSingStream(mediator, writer);
 
-        var failedJing = false;
-        await writer.WriteLineAsync("Sending Jing...");
-        try
-        {
-            await mediator.Send(new Jing { Message = "Jing" });
-        }
-        catch (Exception e)
-        {
-            failedJing = true;
-            await writer.WriteLineAsync(e.ToString());
-        }
-        await writer.WriteLineAsync();
-
-        bool failedSing = false;
-        if (testStreams)
-        {
-            await writer.WriteLineAsync("Sending Sing...");
-            try
-            {
-                int i = 0;
-                await foreach (Song s in mediator.CreateStream(new Sing { Message = "Sing" }))
-                {
-                    if (i == 0) {
-                        failedSing = !(s.Message.Contains("Singing do"));
-                    }
-                    else if (i == 1)
-                    {
-                        failedSing = !(s.Message.Contains("Singing re"));
-                    }
-                    else if (i == 2)
-                    {
-                        failedSing = !(s.Message.Contains("Singing mi"));
-                    }
-                    else if (i == 3)
-                    {
-                        failedSing = !(s.Message.Contains("Singing fa"));
-                    }
-                    else if (i == 4)
-                    {
-                        failedSing = !(s.Message.Contains("Singing so"));
-                    }
-                    else if (i == 5)
-                    {
-                        failedSing = !(s.Message.Contains("Singing la"));
-                    }
-                    else if (i == 6)
-                    {
-                        failedSing = !(s.Message.Contains("Singing ti"));
-                    }
-                    else if (i == 7)
-                    {
-                        failedSing = !(s.Message.Contains("Singing do"));
-                    }
-
-                    failedSing = failedSing || (++i) > 10;
-                }
-            }
-            catch (Exception e)
-            {
-                failedSing = true;
-                await writer.WriteLineAsync(e.ToString());
-            }
-            await writer.WriteLineAsync();
-        }
-
-        var isHandlerForSameExceptionWorks = await IsHandlerForSameExceptionWorks(mediator, writer).ConfigureAwait(false);
-        var isHandlerForBaseExceptionWorks = await IsHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
-        var isHandlerForLessSpecificExceptionWorks = await IsHandlerForLessSpecificExceptionWorks(mediator, writer).ConfigureAwait(false);
-        var isPreferredHandlerForBaseExceptionWorks = await IsPreferredHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
-        var isOverriddenHandlerForBaseExceptionWorks = await IsOverriddenHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
+        bool isHandlerForSameExceptionWorks = await IsHandlerForSameExceptionWorks(mediator, writer).ConfigureAwait(false);
+        bool isHandlerForBaseExceptionWorks = await IsHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
+        bool isHandlerForLessSpecificExceptionWorks = await IsHandlerForLessSpecificExceptionWorks(mediator, writer).ConfigureAwait(false);
+        bool isPreferredHandlerForBaseExceptionWorks = await IsPreferredHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
+        bool isOverriddenHandlerForBaseExceptionWorks = await IsOverriddenHandlerForBaseExceptionWorks(mediator, writer).ConfigureAwait(false);
 
         await writer.WriteLineAsync("---------------");
-        var contents = writer.Contents;
-        var order = new[] {
+        string contents = writer.Contents;
+        int[] order = new[] {
             contents.IndexOf("- Starting Up", StringComparison.OrdinalIgnoreCase),
             contents.IndexOf("-- Handling Request", StringComparison.OrdinalIgnoreCase),
             contents.IndexOf("--- Handled Ping", StringComparison.OrdinalIgnoreCase),
@@ -121,7 +47,7 @@ public static class Runner
             contents.IndexOf("- All Done with Ping", StringComparison.OrdinalIgnoreCase),
         };
 
-        var streamOrder = new[] {
+        int[] streamOrder = new[] {
             contents.IndexOf("-- Handling StreamRequest", StringComparison.OrdinalIgnoreCase),
             contents.IndexOf("--- Handled Sing: Sing, Song", StringComparison.OrdinalIgnoreCase),
             contents.IndexOf("-- Finished StreamRequest", StringComparison.OrdinalIgnoreCase),
@@ -152,41 +78,110 @@ public static class Runner
             StreamOrderedPipelineBehaviors = streamOrder.SequenceEqual(streamOrder.OrderBy(i => i))
         };
 
-        await writer.WriteLineAsync($"Request Handler....................................................{(results.RequestHandlers ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Void Request Handler...............................................{(results.VoidRequestsHandlers ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Pipeline Behavior..................................................{(results.PipelineBehaviors ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Pre-Processor......................................................{(results.RequestPreProcessors ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Post-Processor.....................................................{(results.RequestPostProcessors ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Constrained Post-Processor.........................................{(results.ConstrainedGenericBehaviors ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Ordered Behaviors..................................................{(results.OrderedPipelineBehaviors ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Notification Handler...............................................{(results.NotificationHandler ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Notification Handlers..............................................{(results.MultipleNotificationHandlers ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Constrained Notification Handler...................................{(results.ConstrainedGenericNotificationHandler ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Covariant Notification Handler.....................................{(results.CovariantNotificationHandler ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Handler for inherited request with same exception used.............{(results.HandlerForSameException ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Handler for inherited request with base exception used.............{(results.HandlerForBaseException ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Handler for request with less specific exception used by priority..{(results.HandlerForLessSpecificException ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Preferred handler for inherited request with base exception used...{(results.PreferredHandlerForBaseException ? "Y" : "N")}");
-        await writer.WriteLineAsync($"Overridden handler for inherited request with same exception used..{(results.OverriddenHandlerForBaseException ? "Y" : "N")}");
+        await writer.WriteLineAsync($"Request Handler....................................................{YN(results.RequestHandlers)}");
+        await writer.WriteLineAsync($"Void Request Handler...............................................{YN(results.VoidRequestsHandlers)}");
+        await writer.WriteLineAsync($"Pipeline Behavior..................................................{YN(results.PipelineBehaviors)}");
+        await writer.WriteLineAsync($"Pre-Processor......................................................{YN(results.RequestPreProcessors)}");
+        await writer.WriteLineAsync($"Post-Processor.....................................................{YN(results.RequestPostProcessors)}");
+        await writer.WriteLineAsync($"Constrained Post-Processor.........................................{YN(results.ConstrainedGenericBehaviors)}");
+        await writer.WriteLineAsync($"Ordered Behaviors..................................................{YN(results.OrderedPipelineBehaviors)}");
+        await writer.WriteLineAsync($"Notification Handler...............................................{YN(results.NotificationHandler)}");
+        await writer.WriteLineAsync($"Notification Handlers..............................................{YN(results.MultipleNotificationHandlers)}");
+        await writer.WriteLineAsync($"Constrained Notification Handler...................................{YN(results.ConstrainedGenericNotificationHandler)}");
+        await writer.WriteLineAsync($"Covariant Notification Handler.....................................{YN(results.CovariantNotificationHandler)}");
+        await writer.WriteLineAsync($"Handler for inherited request with same exception used.............{YN(results.HandlerForSameException)}");
+        await writer.WriteLineAsync($"Handler for inherited request with base exception used.............{YN(results.HandlerForBaseException)}");
+        await writer.WriteLineAsync($"Handler for request with less specific exception used by priority..{YN(results.HandlerForLessSpecificException)}");
+        await writer.WriteLineAsync($"Preferred handler for inherited request with base exception used...{YN(results.PreferredHandlerForBaseException)}");
+        await writer.WriteLineAsync($"Overridden handler for inherited request with same exception used..{YN(results.OverriddenHandlerForBaseException)}");
 
         if (testStreams)
         {
-            await writer.WriteLineAsync($"Stream Request Handler.............................................{(results.StreamRequestHandlers ? "Y" : "N")}");
-            await writer.WriteLineAsync($"Stream Pipeline Behavior...........................................{(results.StreamPipelineBehaviors ? "Y" : "N")}");
-            await writer.WriteLineAsync($"Stream Ordered Behaviors...........................................{(results.StreamOrderedPipelineBehaviors ? "Y" : "N")}");
+            await writer.WriteLineAsync($"Stream Request Handler.............................................{YN(results.StreamRequestHandlers)}");
+            await writer.WriteLineAsync($"Stream Pipeline Behavior...........................................{YN(results.StreamPipelineBehaviors)}");
+            await writer.WriteLineAsync($"Stream Ordered Behaviors...........................................{YN(results.StreamOrderedPipelineBehaviors)}");
         }
 
         await writer.WriteLineAsync();
     }
 
+    private static async Task<bool> PublishPonged(IMediator mediator, WrappingWriter writer)
+    {
+        await writer.WriteLineAsync("Publishing Ponged...");
+        bool failedPong = false;
+        try
+        {
+            await mediator.Publish(new Ponged());
+        }
+        catch (Exception e)
+        {
+            failedPong = true;
+            await writer.WriteLineAsync(e.ToString());
+        }
+        await writer.WriteLineAsync();
+        return failedPong;
+    }
+
+    private static async Task<bool> SendJing(IMediator mediator, WrappingWriter writer)
+    {
+        bool failedJing = false;
+        await writer.WriteLineAsync("Sending Jing...");
+        try
+        {
+            await mediator.Send(new Jing { Message = "Jing" });
+        }
+        catch (Exception e)
+        {
+            failedJing = true;
+            await writer.WriteLineAsync(e.ToString());
+        }
+        await writer.WriteLineAsync();
+        return failedJing;
+    }
+
+    private static async Task<bool> TestSingStream(IMediator mediator, WrappingWriter writer)
+    {
+        await writer.WriteLineAsync("Sending Sing...");
+        try
+        {
+            string[] expected = new[]
+            {
+                "Singing do", "Singing re", "Singing mi", "Singing fa",
+                "Singing so", "Singing la", "Singing ti", "Singing do"
+            };
+            int index = 0;
+            bool failedSing = false;
+            await foreach (Song song in mediator.CreateStream(new Sing { Message = "Sing" }))
+            {
+                if (index < expected.Length)
+                {
+                    failedSing = !song.Message.Contains(expected[index]);
+                }
+
+                failedSing = failedSing || (++index) > 10;
+            }
+
+            await writer.WriteLineAsync();
+            return failedSing;
+        }
+        catch (Exception e)
+        {
+            await writer.WriteLineAsync(e.ToString());
+            await writer.WriteLineAsync();
+            return true;
+        }
+    }
+
+    private static string YN(bool value) => value ? "Y" : "N";
+
     private static async Task<bool> IsHandlerForSameExceptionWorks(IMediator mediator, WrappingWriter writer)
     {
-        var isHandledCorrectly = false;
+        bool isHandledCorrectly = false;
 
         await writer.WriteLineAsync("Checking handler to catch exact exception...");
         try
         {
-            await mediator.Send(new PingProtectedResource { Message = "Ping to protected resource" });
+            _ = await mediator.Send(new PingProtectedResource { Message = "Ping to protected resource" });
             isHandledCorrectly = IsExceptionHandledBy<ForbiddenException, AccessDeniedExceptionHandler>(writer);
         }
         catch (Exception e)
@@ -200,12 +195,12 @@ public static class Runner
 
     private static async Task<bool> IsHandlerForBaseExceptionWorks(IMediator mediator, WrappingWriter writer)
     {
-        var isHandledCorrectly = false;
+        bool isHandledCorrectly = false;
 
         await writer.WriteLineAsync("Checking shared handler to catch exception by base type...");
         try
         {
-            await mediator.Send(new PingResource { Message = "Ping to missed resource" });
+            _ = await mediator.Send(new PingResource { Message = "Ping to missed resource" });
             isHandledCorrectly = IsExceptionHandledBy<ResourceNotFoundException, ConnectionExceptionHandler>(writer);
         }
         catch (Exception e)
@@ -216,16 +211,16 @@ public static class Runner
 
         return isHandledCorrectly;
     }
-        
+
     private static async Task<bool> IsHandlerForLessSpecificExceptionWorks(IMediator mediator, WrappingWriter writer)
     {
-        var isHandledCorrectly = false;
+        bool isHandledCorrectly = false;
 
         await writer.WriteLineAsync("Checking base handler to catch any exception...");
         try
         {
-            await mediator.Send(new PingResourceTimeout { Message = "Ping to ISS resource" });
-            isHandledCorrectly = IsExceptionHandledBy<TaskCanceledException, CommonExceptionHandler> (writer);
+            _ = await mediator.Send(new PingResourceTimeout { Message = "Ping to ISS resource" });
+            isHandledCorrectly = IsExceptionHandledBy<TaskCanceledException, CommonExceptionHandler>(writer);
         }
         catch (Exception e)
         {
@@ -238,14 +233,14 @@ public static class Runner
 
     private static async Task<bool> IsPreferredHandlerForBaseExceptionWorks(IMediator mediator, WrappingWriter writer)
     {
-        var isHandledCorrectly = false;
+        bool isHandledCorrectly = false;
 
         await writer.WriteLineAsync("Selecting preferred handler to handle exception...");
 
         try
         {
-            await mediator.Send(new ExceptionHandler.Overrides.PingResourceTimeout { Message = "Ping to ISS resource (preferred)" });
-            isHandledCorrectly = IsExceptionHandledBy<TaskCanceledException, ExceptionHandler.Overrides.CommonExceptionHandler> (writer);
+            _ = await mediator.Send(new ExceptionHandler.Overrides.PingResourceTimeout { Message = "Ping to ISS resource (preferred)" });
+            isHandledCorrectly = IsExceptionHandledBy<TaskCanceledException, ExceptionHandler.Overrides.CommonExceptionHandler>(writer);
         }
         catch (Exception e)
         {
@@ -258,14 +253,14 @@ public static class Runner
 
     private static async Task<bool> IsOverriddenHandlerForBaseExceptionWorks(IMediator mediator, WrappingWriter writer)
     {
-        var isHandledCorrectly = false;
+        bool isHandledCorrectly = false;
 
         await writer.WriteLineAsync("Selecting new handler to handle exception...");
 
         try
         {
-            await mediator.Send(new PingNewResource { Message = "Ping to ISS resource (override)" });
-            isHandledCorrectly = IsExceptionHandledBy<ServerException, ExceptionHandler.Overrides.ServerExceptionHandler> (writer);
+            _ = await mediator.Send(new PingNewResource { Message = "Ping to ISS resource (override)" });
+            isHandledCorrectly = IsExceptionHandledBy<ServerException, ExceptionHandler.Overrides.ServerExceptionHandler>(writer);
         }
         catch (Exception e)
         {
@@ -279,14 +274,16 @@ public static class Runner
     private static bool IsExceptionHandledBy<TException, THandler>(WrappingWriter writer)
         where TException : Exception
     {
-        var messages = writer.Contents.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToList();
+        List<string> messages = writer.Contents.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToList();
         if (messages.Count - 3 < 0)
+        {
             return false;
+        }
 
         // Note: For this handler type to be found in messages, it must be written in messages by LogExceptionAction
-        return messages[messages.Count - 2].Contains(typeof(THandler).FullName)
-            // Note: For this exception type to be found in messages, exception must be written in all tested exception handlers
-               && messages[messages.Count - 3].Contains(typeof(TException).FullName);
+        return messages[^2].Contains(typeof(THandler).FullName)
+               // Note: For this exception type to be found in messages, exception must be written in all tested exception handlers
+               && messages[^3].Contains(typeof(TException).FullName);
     }
 }
 
@@ -315,25 +312,20 @@ public class RunResults
     public bool StreamOrderedPipelineBehaviors { get; set; }
 }
 
-public class WrappingWriter : TextWriter
+public class WrappingWriter(TextWriter innerWriter) : TextWriter
 {
-    private readonly TextWriter _innerWriter;
-    private readonly StringBuilder _stringWriter = new StringBuilder();
-
-    public WrappingWriter(TextWriter innerWriter)
-    {
-        _innerWriter = innerWriter;
-    }
+    private readonly TextWriter _innerWriter = innerWriter;
+    private readonly StringBuilder _stringWriter = new();
 
     public override void Write(char value)
     {
-        _stringWriter.Append(value);
+        _ = _stringWriter.Append(value);
         _innerWriter.Write(value);
     }
 
     public override Task WriteLineAsync(string value)
     {
-        _stringWriter.AppendLine(value);
+        _ = _stringWriter.AppendLine(value);
         return _innerWriter.WriteLineAsync(value);
     }
 

@@ -1,9 +1,9 @@
-using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace MediatR.Tests.Pipeline.Streams;
@@ -36,7 +36,7 @@ public class StreamPipelineBehaviorTests
         {
             yield return new Song { Message = "Start behaving..." };
 
-            await foreach (var item in next().WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (Song? item in next().WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 yield return item;
             }
@@ -51,20 +51,20 @@ public class StreamPipelineBehaviorTests
         var services = new ServiceCollection();
 
         // Register the stream handler and the pipeline behavior
-        services.AddTransient<IStreamRequestHandler<Sing, Song>, SingHandler>();
-        services.AddTransient<IStreamPipelineBehavior<Sing, Song>, SingSongPipelineBehavior>();
+        _ = services.AddTransient<IStreamRequestHandler<Sing, Song>, SingHandler>();
+        _ = services.AddTransient<IStreamPipelineBehavior<Sing, Song>, SingSongPipelineBehavior>();
 
         // Register Mediator
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient<IMediator, Mediator>();
 
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var responses = mediator.CreateStream(new Sing { Message = "Sing" }, TestContext.Current.CancellationToken);
+        IAsyncEnumerable<Song> responses = mediator.CreateStream(new Sing { Message = "Sing" }, TestContext.Current.CancellationToken);
 
         int i = 0;
-        await foreach (var response in responses)
+        await foreach (Song? response in responses)
         {
             if (i == 0)
             {

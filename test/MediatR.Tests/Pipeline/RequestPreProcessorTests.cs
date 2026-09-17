@@ -1,8 +1,8 @@
-using System.Threading;
 using MediatR.NotificationPublishers;
 using MediatR.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -22,17 +22,14 @@ public class RequestPreProcessorTests
 
     public class PingHandler : IRequestHandler<Ping, Pong>
     {
-        public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new Pong { Message = request.Message + " Pong" });
-        }
+        public Task<Pong> Handle(Ping request, CancellationToken cancellationToken) => Task.FromResult(new Pong { Message = request.Message + " Pong" });
     }
 
     public class PingPreProcessor : IRequestPreProcessor<Ping>
     {
         public Task Process(Ping request, CancellationToken cancellationToken)
         {
-            request.Message = request.Message + " Ping";
+            request.Message += " Ping";
 
             return Task.FromResult(0);
         }
@@ -41,18 +38,18 @@ public class RequestPreProcessorTests
     [Fact]
     public async Task Should_run_preprocessors()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         // Register handlers and preprocessor (register by interface)
-        services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
-        services.AddTransient<IRequestPreProcessor<Ping>, PingPreProcessor>();
+        _ = services.AddTransient<IRequestHandler<Ping, Pong>, PingHandler>();
+        _ = services.AddTransient<IRequestPreProcessor<Ping>, PingPreProcessor>();
         // Register the pipeline behavior (preprocessor behavior)
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
+        _ = services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
 
         // Register MediatR components.
         // Note: The mediator's constructor requires an IServiceProvider and a notification publisher.
         // In this example, we register a basic publisher implementation.
-        services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
-        services.AddTransient<IMediator, Mediator>();
+        _ = services.AddTransient<INotificationPublisher, ForeachAwaitPublisher>();
+        _ = services.AddTransient<IMediator, Mediator>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();

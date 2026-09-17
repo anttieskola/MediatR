@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using MediatR.NotificationPublishers;
+﻿using MediatR.NotificationPublishers;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -16,7 +16,7 @@ public class NotificationPublisherTests
 
         public async Task Publish(IEnumerable<NotificationHandlerExecutor> handlerExecutors, INotification notification, CancellationToken cancellationToken)
         {
-            foreach (var handlerExecutor in handlerExecutors)
+            foreach (NotificationHandlerExecutor handlerExecutor in handlerExecutors)
             {
                 await handlerExecutor.HandlerCallback(notification, cancellationToken);
                 CallCount++;
@@ -27,39 +27,39 @@ public class NotificationPublisherTests
     [Fact]
     public void ShouldResolveDefaultPublisher()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        ServiceCollection services = new();
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator? mediator = provider.GetService<IMediator>();
 
-        mediator.ShouldNotBeNull();
+        _ = mediator.ShouldNotBeNull();
 
-        var publisher = provider.GetService<INotificationPublisher>();
+        INotificationPublisher? publisher = provider.GetService<INotificationPublisher>();
 
-        publisher.ShouldNotBeNull();
+        _ = publisher.ShouldNotBeNull();
     }
 
     [Fact]
     public async Task ShouldSubstitutePublisherInstance()
     {
-        var publisher = new MockPublisher();
-        var services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        MockPublisher publisher = new();
+        ServiceCollection services = new();
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining<CustomMediatorTests>();
             cfg.NotificationPublisher = publisher;
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator? mediator = provider.GetService<IMediator>();
 
-        mediator.ShouldNotBeNull();
+        _ = mediator.ShouldNotBeNull();
 
         await mediator.Publish(new Pinged(), TestContext.Current.CancellationToken);
 
@@ -69,25 +69,25 @@ public class NotificationPublisherTests
     [Fact]
     public async Task ShouldSubstitutePublisherServiceType()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        ServiceCollection services = new();
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
             cfg.NotificationPublisherType = typeof(MockPublisher);
             cfg.Lifetime = ServiceLifetime.Singleton;
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetService<IMediator>();
-        var publisher = provider.GetService<INotificationPublisher>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator? mediator = provider.GetService<IMediator>();
+        INotificationPublisher? publisher = provider.GetService<INotificationPublisher>();
 
-        mediator.ShouldNotBeNull();
-        publisher.ShouldNotBeNull();
+        _ = mediator.ShouldNotBeNull();
+        _ = publisher.ShouldNotBeNull();
 
         await mediator.Publish(new Pinged(), TestContext.Current.CancellationToken);
 
-        var mock = publisher.ShouldBeOfType<MockPublisher>();
+        MockPublisher mock = publisher.ShouldBeOfType<MockPublisher>();
 
         mock.CallCount.ShouldBeGreaterThan(0);
     }
@@ -95,24 +95,24 @@ public class NotificationPublisherTests
     [Fact]
     public async Task ShouldSubstitutePublisherServiceTypeWithWhenAll()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        ServiceCollection services = new();
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining(typeof(CustomMediatorTests));
+            _ = cfg.RegisterServicesFromAssemblyContaining<CustomMediatorTests>();
             cfg.NotificationPublisherType = typeof(TaskWhenAllPublisher);
             cfg.Lifetime = ServiceLifetime.Singleton;
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetService<IMediator>();
-        var publisher = provider.GetService<INotificationPublisher>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator? mediator = provider.GetService<IMediator>();
+        INotificationPublisher? publisher = provider.GetService<INotificationPublisher>();
 
-        mediator.ShouldNotBeNull();
-        publisher.ShouldNotBeNull();
+        _ = mediator.ShouldNotBeNull();
+        _ = publisher.ShouldNotBeNull();
 
         await Should.NotThrowAsync(mediator.Publish(new Pinged(), TestContext.Current.CancellationToken));
 
-        publisher.ShouldBeOfType<TaskWhenAllPublisher>();
+        _ = publisher.ShouldBeOfType<TaskWhenAllPublisher>();
     }
 }

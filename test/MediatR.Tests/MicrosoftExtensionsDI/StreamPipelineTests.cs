@@ -1,10 +1,10 @@
-﻿using System.Runtime.CompilerServices;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -16,7 +16,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<Pong> Handle(StreamPing request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Outer before");
-            await foreach (var response in next().WithCancellation(cancellationToken))
+            await foreach (Pong? response in next().WithCancellation(cancellationToken))
             {
                 yield return response;
             }
@@ -29,7 +29,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<Pong> Handle(StreamPing request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner before");
-            await foreach (var response in next().WithCancellation(cancellationToken))
+            await foreach (Pong? response in next().WithCancellation(cancellationToken))
             {
                 yield return response;
             }
@@ -42,17 +42,17 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddTransient<IStreamPipelineBehavior<StreamPing, Pong>, OuterBehavior>();
-        services.AddTransient<IStreamPipelineBehavior<StreamPing, Pong>, InnerBehavior>();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly));
-        var provider = services.BuildServiceProvider();
+        _ = services.AddSingleton(output);
+        _ = services.AddTransient<IStreamPipelineBehavior<StreamPing, Pong>, OuterBehavior>();
+        _ = services.AddTransient<IStreamPipelineBehavior<StreamPing, Pong>, InnerBehavior>();
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly));
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
+        IAsyncEnumerable<Pong> stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
-        await foreach (var response in stream)
+        await foreach (Pong? response in stream)
         {
             response.Message.ShouldBe("Ping Pang");
         }
@@ -72,20 +72,20 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
-            cfg.AddStreamBehavior<IStreamPipelineBehavior<StreamPing, Pong>, OuterBehavior>();
-            cfg.AddStreamBehavior<IStreamPipelineBehavior<StreamPing, Pong>, InnerBehavior>();
+            _ = cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
+            _ = cfg.AddStreamBehavior<IStreamPipelineBehavior<StreamPing, Pong>, OuterBehavior>();
+            _ = cfg.AddStreamBehavior<IStreamPipelineBehavior<StreamPing, Pong>, InnerBehavior>();
         });
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
 
-        var mediator = provider.GetRequiredService<IMediator>();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        var stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
+        IAsyncEnumerable<Pong> stream = mediator.CreateStream(new StreamPing { Message = "Ping" }, TestContext.Current.CancellationToken);
 
-        await foreach (var response in stream)
+        await foreach (Pong? response in stream)
         {
             response.Message.ShouldBe("Ping Pang");
         }

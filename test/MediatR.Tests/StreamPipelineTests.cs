@@ -1,9 +1,9 @@
-using System.Threading;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -34,10 +34,7 @@ public class StreamPipelineTests
     {
         private readonly Logger _output;
 
-        public PingHandler(Logger output)
-        {
-            _output = output;
-        }
+        public PingHandler(Logger output) => _output = output;
 
         public async IAsyncEnumerable<Pong> Handle(Ping request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
@@ -60,7 +57,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Outer before");
-            await foreach (var result in next())
+            await foreach (Pong result in next())
             {
                 yield return result;
             }
@@ -73,7 +70,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner before");
-            await foreach (var result in next())
+            await foreach (Pong result in next())
             {
                 yield return result;
             }
@@ -87,7 +84,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Inner generic before");
-            await foreach (var result in next())
+            await foreach (TResponse? result in next())
             {
                 yield return result;
             }
@@ -101,7 +98,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Outer generic before");
-            await foreach (var result in next())
+            await foreach (TResponse? result in next())
             {
                 yield return result;
             }
@@ -116,7 +113,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Constrained before");
-            await foreach (var result in next())
+            await foreach (TResponse result in next())
             {
                 yield return result;
             }
@@ -129,7 +126,7 @@ public class StreamPipelineTests
         public async IAsyncEnumerable<Pong> Handle(Ping request, StreamHandlerDelegate<Pong> next, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             output.Messages.Add("Concrete before");
-            await foreach (var result in next())
+            await foreach (Pong result in next())
             {
                 yield return result;
             }
@@ -139,7 +136,7 @@ public class StreamPipelineTests
 
     public class Logger
     {
-        public IList<string> Messages { get; } = new List<string>();
+        public IList<string> Messages { get; } = [];
     }
 
     [Fact]
@@ -147,18 +144,18 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
-            cfg.AddStreamBehavior<OuterBehavior>();
-            cfg.AddStreamBehavior<InnerBehavior>();
+            _ = cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
+            _ = cfg.AddStreamBehavior<OuterBehavior>();
+            _ = cfg.AddStreamBehavior<InnerBehavior>();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
+        await foreach (Pong? response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -178,19 +175,19 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
+            _ = cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
-            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
+        await foreach (Pong? response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -210,20 +207,20 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
+            _ = cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
-            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
-            cfg.AddOpenStreamBehavior(typeof(ConstrainedBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(ConstrainedBehavior<,>));
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
+        await foreach (Pong? response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -241,7 +238,7 @@ public class StreamPipelineTests
 
         output.Messages.Clear();
 
-        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
+        await foreach (Zong? response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Zing Zong");
         }
@@ -261,20 +258,20 @@ public class StreamPipelineTests
     {
         var output = new Logger();
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(output);
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(output);
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
+            _ = cfg.RegisterServicesFromAssembly(typeof(PublishTests).Assembly);
 
-            cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
-            cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
-            cfg.AddStreamBehavior<ConcreteBehavior>();
+            _ = cfg.AddOpenStreamBehavior(typeof(OuterBehavior<,>));
+            _ = cfg.AddOpenStreamBehavior(typeof(InnerBehavior<,>));
+            _ = cfg.AddStreamBehavior<ConcreteBehavior>();
         });
 
-        var provider = services.BuildServiceProvider();
-        var mediator = provider.GetRequiredService<IMediator>();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IMediator mediator = provider.GetRequiredService<IMediator>();
 
-        await foreach (var response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
+        await foreach (Pong? response in mediator.CreateStream(new Ping { Message = "Ping" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Ping Pong");
         }
@@ -292,7 +289,7 @@ public class StreamPipelineTests
 
         output.Messages.Clear();
 
-        await foreach (var response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
+        await foreach (Zong? response in mediator.CreateStream(new Zing { Message = "Zing" }, TestContext.Current.CancellationToken))
         {
             response.Message.ShouldBe("Zing Zong");
         }

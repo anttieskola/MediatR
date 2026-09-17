@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -14,8 +14,8 @@ public class DerivingRequestsTests
     public DerivingRequestsTests()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(Ping)));
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining(typeof(Ping)));
         _provider = services.BuildServiceProvider();
         _mediator = _provider.GetRequiredService<IMediator>();
     }

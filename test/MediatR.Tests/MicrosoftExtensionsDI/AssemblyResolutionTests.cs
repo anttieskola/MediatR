@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Linq;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -13,32 +13,23 @@ public class AssemblyResolutionTests
     public AssemblyResolutionTests()
     {
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton(new Logger());
-        services.AddMediatR(cfg =>
+        _ = services.AddSingleton(new Logger());
+        _ = services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
+            _ = cfg.RegisterServicesFromAssembly(typeof(Ping).Assembly);
             cfg.RegisterGenericHandlers = true;
         });
         _provider = services.BuildServiceProvider();
     }
 
     [Fact]
-    public void ShouldResolveMediator()
-    {
-        _provider.GetService<IMediator>().ShouldNotBeNull();
-    }
+    public void ShouldResolveMediator() => _provider.GetService<IMediator>().ShouldNotBeNull();
 
     [Fact]
-    public void ShouldResolveRequestHandler()
-    {
-        _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
-    }
+    public void ShouldResolveRequestHandler() => _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldNotBeNull();
 
     [Fact]
-    public void ShouldResolveInternalHandler()
-    {
-        _provider.GetService<IRequestHandler<InternalPing>>().ShouldNotBeNull();
-    }
+    public void ShouldResolveInternalHandler() => _provider.GetService<IRequestHandler<InternalPing>>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldResolveNotificationHandlers()
@@ -51,11 +42,11 @@ public class AssemblyResolutionTests
     [Fact]
     public void ShouldRequireAtLeastOneAssembly()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
 
         Action registration = () => services.AddMediatR(_ => { });
 
-        registration.ShouldThrow<ArgumentException>();
+        _ = registration.ShouldThrow<ArgumentException>();
     }
 
     [Fact]

@@ -4,14 +4,9 @@ using System.Threading.Tasks;
 
 namespace MediatR.Examples.PublishStrategies;
 
-public class SyncPingedHandler : INotificationHandler<Pinged>
+public class SyncPingedHandler(string name) : INotificationHandler<Pinged>
 {
-    public SyncPingedHandler(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; set; }
+    public string Name { get; set; } = name;
 
     public Task Handle(Pinged notification, CancellationToken cancellationToken)
     {

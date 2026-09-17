@@ -1,10 +1,10 @@
-using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 using Xunit;
 
 namespace MediatR.Tests;
@@ -33,10 +33,10 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
@@ -59,10 +59,10 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler_via_dynamic_dispatch()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
@@ -86,10 +86,10 @@ public class CreateStreamTests
     [Fact]
     public async Task Should_resolve_main_handler_by_specific_interface()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IStreamRequestHandler<Ping, Pong>, PingStreamHandler>();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<ISender>();
@@ -112,26 +112,26 @@ public class CreateStreamTests
     [Fact]
     public void Should_raise_execption_on_null_request()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        Should.Throw<ArgumentNullException>(() => mediator.CreateStream((Ping) null!));
+        _ = Should.Throw<ArgumentNullException>(() => mediator.CreateStream((Ping) null!));
     }
 
     [Fact]
     public void Should_raise_execption_on_null_request_via_dynamic_dispatch()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<IMediator>(sp => new Mediator(sp));
-        services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
+        ServiceCollection services = new();
+        _ = services.AddSingleton<IMediator>(sp => new Mediator(sp));
+        _ = services.AddSingleton<ISender>(sp => sp.GetRequiredService<IMediator>());
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
-        Should.Throw<ArgumentNullException>(() => mediator.CreateStream((object) null!));
+        _ = Should.Throw<ArgumentNullException>(() => mediator.CreateStream(null!));
     }
 }

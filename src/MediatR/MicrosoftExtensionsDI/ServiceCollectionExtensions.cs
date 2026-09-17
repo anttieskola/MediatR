@@ -1,8 +1,7 @@
-using System;
-using System.Linq;
 using MediatR;
 using MediatR.Pipeline;
 using MediatR.Registration;
+using System;
 
 #pragma warning disable IDE0130 // Namespace is on purpose for dependency injection extensions
 namespace Microsoft.Extensions.DependencyInjection;
@@ -25,23 +24,23 @@ public static class ServiceCollectionExtensions
     /// <param name="services">Service collection</param>
     /// <param name="configuration">The action used to configure the options</param>
     /// <returns>Service collection</returns>
-    public static IServiceCollection AddMediatR(this IServiceCollection services, 
+    public static IServiceCollection AddMediatR(this IServiceCollection services,
         Action<MediatRServiceConfiguration> configuration)
     {
-        var serviceConfig = new MediatRServiceConfiguration();
+        MediatRServiceConfiguration serviceConfig = new();
 
         configuration.Invoke(serviceConfig);
 
         return services.AddMediatR(serviceConfig);
     }
-    
+
     /// <summary>
     /// Registers handlers and mediator types from the specified assemblies
     /// </summary>
     /// <param name="services">Service collection</param>
     /// <param name="configuration">Configuration options</param>
     /// <returns>Service collection</returns>
-    public static IServiceCollection AddMediatR(this IServiceCollection services, 
+    public static IServiceCollection AddMediatR(this IServiceCollection services,
         MediatRServiceConfiguration configuration)
     {
         if (configuration.AssembliesToRegister.Count == 0)

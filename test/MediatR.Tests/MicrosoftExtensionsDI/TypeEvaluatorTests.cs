@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR.Pipeline;
 using MediatR.Tests.MicrosoftExtensionsDI.Included;
-using MediatR.Pipeline;
-using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace MediatR.Tests.MicrosoftExtensionsDI;
@@ -17,25 +17,22 @@ public class TypeEvaluatorTests
     public TypeEvaluatorTests()
     {
         _services = new ServiceCollection();
-        _services.AddSingleton(new Logger());
-        _services.AddMediatR(cfg =>
+        _ = _services.AddSingleton(new Logger());
+        _ = _services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssemblyContaining(typeof(Ping));
+            _ = cfg.RegisterServicesFromAssemblyContaining<Ping>();
             cfg.TypeEvaluator = t => t.Namespace == "MediatR.Tests.MicrosoftExtensionsDI.Included";
         });
         _provider = _services.BuildServiceProvider();
     }
 
     [Fact]
-    public void ShouldResolveMediator()
-    {
-        _provider.GetService<IMediator>().ShouldNotBeNull();
-    }
+    public void ShouldResolveMediator() => _provider.GetService<IMediator>().ShouldNotBeNull();
 
     [Fact]
     public void ShouldOnlyResolveIncludedRequestHandlers()
     {
-        _provider.GetService<IRequestHandler<Foo, Bar>>().ShouldNotBeNull();
+        _ = _provider.GetService<IRequestHandler<Foo, Bar>>().ShouldNotBeNull();
         _provider.GetService<IRequestHandler<Ping, Pong>>().ShouldBeNull();
     }
 

@@ -1,12 +1,15 @@
-namespace MediatR.Pipeline;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace MediatR.Pipeline;
+#pragma warning disable S2436
 /// <summary>
 /// Defines an exception handler for a request and response
 /// </summary>
+/// <remarks>
+/// Three type parameters are required: the request, the response (to build the replacement) and the exception type.
+/// </remarks>
 /// <typeparam name="TRequest">Request type</typeparam>
 /// <typeparam name="TResponse">Response type</typeparam>
 /// <typeparam name="TException">Exception type</typeparam>
@@ -24,3 +27,4 @@ public interface IRequestExceptionHandler<in TRequest, TResponse, in TException>
     /// <returns>An awaitable task</returns>
     Task Handle(TRequest request, TException exception, RequestExceptionHandlerState<TResponse> state, CancellationToken cancellationToken);
 }
+#pragma warning restore S2436

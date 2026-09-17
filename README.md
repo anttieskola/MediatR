@@ -58,6 +58,10 @@ All development after fork is licensed under the Apache License, Version 2.0.
 - Upgraded to latest .NET 10 patch version
 - xUnit upgrade
 
+### 2026-09-18 - Latest language features refactoring
+- Refactored code to use latest language features where applicable
+- Added new unit tests
+
 ## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner
