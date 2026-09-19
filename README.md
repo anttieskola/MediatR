@@ -62,6 +62,9 @@ All development after fork is licensed under the Apache License, Version 2.0.
 - Refactored code to use latest language features where applicable
 - Added new unit tests
 
+### 2026-09-19 - Solution format change
+- Updated solution from the old `.sln` format to the new XML-based `.slnx` format
+
 ## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner
