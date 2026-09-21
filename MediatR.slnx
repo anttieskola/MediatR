@@ -8,7 +8,7 @@
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
-    <File Path="Directory.Packages.Props" />
+    <File Path="Directory.Packages.props" />
     <File Path="generate_coverage_report.cmd" />
     <File Path="GIT-signing.md" />
     <File Path="global.json" />
