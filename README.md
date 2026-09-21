@@ -65,6 +65,10 @@ All development after fork is licensed under the Apache License, Version 2.0.
 ### 2026-09-19 - Solution format change
 - Updated solution from the old `.sln` format to the new XML-based `.slnx` format
 
+### 2026-09-20 - Test project dependencies update
+- Removed coverlet as obsolete, we can use Microsoft test extensions instead
+- Fixed capitalization typo in Directory.Build.Packages.props file
+
 ## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner
