@@ -69,6 +69,11 @@ All development after fork is licensed under the Apache License, Version 2.0.
 - Removed coverlet as obsolete, we can use Microsoft test extensions instead
 - Fixed capitalization typo in Directory.Build.Packages.props file
 
+### 2026-11-1 - Framework update
+- Updated framework references
+- Removed obsole coverlet from packages file
+- Added Claude instructions
+
 ## Dotnet tools used
 ```bash
 dotnet tool install --global dotnet-sonarscanner
